@@ -443,7 +443,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
         @Override
         public void run() throws Exception {
-            globalLogger.fine("MaxThreads: " + maxThreads);
+            baseLogger.fine("MaxThreads: " + maxThreads);
             final StringBuffer sb = new StringBuffer();
             for (final String arg : inputFiles) {
                 sb.append(arg);

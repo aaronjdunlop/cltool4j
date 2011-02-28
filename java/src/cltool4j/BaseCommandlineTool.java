@@ -79,7 +79,7 @@ public abstract class BaseCommandlineTool {
             .getAnnotation(Threadable.class).defaultThreads() != 0 ? getClass().getAnnotation(
             Threadable.class).defaultThreads() : Runtime.getRuntime().availableProcessors()) : 1;
 
-    protected final static Logger globalLogger = GlobalLogger.singleton();
+    protected final static Logger baseLogger = Logger.getLogger("");
 
     @Argument(multiValued = true, metaVar = "files")
     protected String[] inputFiles = new String[0];
@@ -224,13 +224,13 @@ public abstract class BaseCommandlineTool {
 
             // Configure java.util.logging to log to the console, and only the message actually
             // logged, without any header or formatting.
-            for (final Handler h : globalLogger.getHandlers()) {
-                globalLogger.removeHandler(h);
+            for (final Handler h : baseLogger.getHandlers()) {
+                baseLogger.removeHandler(h);
             }
-            globalLogger.setUseParentHandlers(false);
+            baseLogger.setUseParentHandlers(false);
             final Level l = verbosityLevel.toLevel();
-            globalLogger.addHandler(new SystemOutHandler(l));
-            globalLogger.setLevel(l);
+            baseLogger.addHandler(new SystemOutHandler(l));
+            baseLogger.setLevel(l);
 
             // If input files were specified on the command-line, check for the first one before running
             // setup()
