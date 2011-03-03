@@ -7,15 +7,11 @@ import java.util.logging.Logger;
  * 
  * @author aarond
  */
-public class BaseLogger extends Logger {
+public class BaseLogger {
 
-    private final static BaseLogger singletonInstance = new BaseLogger();
+    private final static Logger singletonInstance = Logger.getLogger("");
 
-    private BaseLogger() {
-        super("", null);
-    }
-
-    public static BaseLogger singleton() {
+    public static Logger singleton() {
         return singletonInstance;
     }
 }
