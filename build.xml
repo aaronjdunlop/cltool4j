@@ -3,8 +3,8 @@
 <project name="cltool" default="dist" basedir=".">
 
     <target name="dist" depends="compile" description="Build release jar">
-        <jar basedir="build" file="build/cltool.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" /> 
-        <jar basedir="java/src" file="build/cltool-src.jar" includes="**/*.java" /> 
+        <jar basedir="build" file="build/cltool4j.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" /> 
+        <jar basedir="java/src" file="build/cltool4j-src.jar" includes="**/*.java" /> 
     </target>
     
     <target name="compile" description="Compile">
