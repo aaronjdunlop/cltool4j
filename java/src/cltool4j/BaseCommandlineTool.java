@@ -105,14 +105,14 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * Perform any tool-specific setup. This method will only be called once, even if the tool is threadable
+     * Perform any tool-specific cleanup. This method will only be called once, even if the tool is threadable
      * and {@link #run()} is called by multiple threads.
      */
     protected void cleanup() {
     }
 
     /**
-     * Execute the tool's core functionality. If the tool is threadable, this method should be thread-safe and
+     * Execute the tool's core functionality. If the tool is threadable, this method must be thread-safe and
      * reentrant.
      * 
      * @throws Exception
@@ -120,7 +120,8 @@ public abstract class BaseCommandlineTool {
     protected abstract void run() throws Exception;
 
     /**
-     * Callback executed when starting to process a new input file
+     * Callback executed when starting to process a new input file. Subclasses may override
+     * {@link #beginFile(String)} if they wish to be notified when the input source changes.
      * 
      * @param filename
      */
@@ -290,53 +291,83 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * Open the specified file, uncompressing GZIP'd files as appropriate
+     * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
      * 
      * @param filename
      * @return InputStream
      * @throws IOException
      */
     protected InputStream fileAsInputStream(final String filename) throws IOException {
-        final File f = new File(filename);
+        return fileAsInputStream(new File(filename));
+    }
+
+    /**
+     * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
+     * 
+     * @param f File
+     * @return InputStream
+     * @throws IOException
+     */
+    protected InputStream fileAsInputStream(final File f) throws IOException {
         if (!f.exists()) {
-            System.err.println("Unable to find file: " + filename);
+            System.err.println("Unable to find file: " + f.getName());
             System.err.flush();
             System.exit(-1);
         }
 
-        InputStream is = new FileInputStream(filename);
-        if (filename.endsWith(".gz")) {
+        InputStream is = new FileInputStream(f);
+        if (f.getName().endsWith(".gz")) {
             is = new GZIPInputStream(is);
         }
         return is;
     }
 
     /**
-     * Read the specified file, uncompressing GZIP'd files as appropriate
+     * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
+     * 
+     * @param f File
+     * @return BufferedReader
+     * @throws IOException
+     */
+    protected BufferedReader fileAsBufferedReader(final File f) throws IOException {
+        return new BufferedReader(new InputStreamReader(fileAsInputStream(f)));
+    }
+
+    /**
+     * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
+     * 
+     * @param filename
+     * @return BufferedReader
+     * @throws IOException
+     */
+    protected BufferedReader fileAsBufferedReader(final String filename) throws IOException {
+        return fileAsBufferedReader(new File(filename));
+    }
+
+    /**
+     * Convenience method; reads the file in its entirety, uncompressing GZIP'd files as appropriate. Warning:
+     * This method is not particularly efficient, and may consume large amounts of CPU and memory if executed
+     * on a large file.
      * 
      * @param filename
      * @return InputStream
      * @throws IOException
      */
     protected String fileAsString(final String filename) throws IOException {
-        final File f = new File(filename);
-        if (!f.exists()) {
-            System.err.println("Unable to find file: " + filename);
-            System.exit(-1);
-        }
-
         final StringBuilder sb = new StringBuilder(10240);
-        InputStream is = new FileInputStream(filename);
-        if (filename.endsWith(".gz")) {
-            is = new GZIPInputStream(is);
-        }
-        final BufferedReader r = new BufferedReader(new InputStreamReader(is));
+        final BufferedReader r = fileAsBufferedReader(filename);
         for (int c = r.read(); c != 0; c = r.read()) {
             sb.append((char) c);
         }
         return sb.toString();
     }
 
+    /**
+     * Prints the entire content of the {@link InputStream} to STDOUT.
+     * 
+     * @param input
+     * @throws IOException
+     */
     private void printToStdout(final InputStream input) throws IOException {
         final BufferedReader br = new BufferedReader(new InputStreamReader(input));
         for (String line = br.readLine(); line != null; line = br.readLine()) {
@@ -454,15 +485,12 @@ public abstract class BaseCommandlineTool {
     /**
      * Combines multiple {@link InputStream}s into a single stream. Adapted from {@link SequenceInputStream}
      * to alert {@link BaseCommandlineTool} when beginning a new file.
-     * 
-     * @author aarond
-     * 
      */
     private class MultiInputStream extends InputStream {
         Iterator<? extends InputStream> streamIterator;
         InputStream currentStream;
         int currentFileIndex = -1;
-        
+
         public MultiInputStream(List<? extends InputStream> inputStreams) {
             this.streamIterator = inputStreams.iterator();
             try {
