@@ -193,12 +193,12 @@ public class CmdLineParser {
                 setter = (Setter<T>) findOptionByName(optionName);
 
                 if (setter == null) {
-                    throw new CmdLineException(this, "<" + optionName + "> is not a valid option");
+                    throw new CmdLineException("<" + optionName + "> is not a valid option");
                 }
 
                 if (setter.option.choiceGroup().length() > 0) {
                     if (observedChoiceGroups.contains(setter.option.choiceGroup())) {
-                        throw new CmdLineException(this, "Only one of "
+                        throw new CmdLineException("Only one of "
                                 + choiceGroupSummary(setter.option.choiceGroup()) + " is allowed");
                     }
                     observedChoiceGroups.add(setter.option.choiceGroup());
@@ -207,16 +207,16 @@ public class CmdLineParser {
                 try {
                     setter.parseNextOperand(parameters);
                 } catch (NoSuchElementException e) {
-                    throw new CmdLineException(this, "Option <" + optionName + "> takes an operand");
+                    throw new CmdLineException("Option <" + optionName + "> takes an operand");
                 } catch (IllegalArgumentException e) {
-                    throw new CmdLineException(this, "\"" + parameters.current()
+                    throw new CmdLineException("\"" + parameters.current()
                             + "\" is not a valid argument for " + optionName);
                 }
 
             } else {
                 // Parse as an argument
                 if (argIndex >= argumentSetters.size()) {
-                    throw new CmdLineException(this, argumentSetters.size() == 0 ? "No arguments allowed"
+                    throw new CmdLineException(argumentSetters.size() == 0 ? "No arguments allowed"
                             : "Too many arguments");
                 }
 
@@ -230,7 +230,7 @@ public class CmdLineParser {
                 try {
                     setter.parseNextArgument(parameters);
                 } catch (IllegalArgumentException e) {
-                    throw new CmdLineException(this, "\"" + parameters.current()
+                    throw new CmdLineException("\"" + parameters.current()
                             + "\" is not valid for argument <" + setter.parameterName() + ">");
                 }
             }
@@ -248,7 +248,7 @@ public class CmdLineParser {
             // make sure that all mandatory options are present
             for (final Setter<?> setter : optionSetters) {
                 if (setter.option.required() && !observedSetters.contains(setter)) {
-                    throw new CmdLineException(this, "Option <" + setter.parameterName() + "> is required");
+                    throw new CmdLineException("Option <" + setter.parameterName() + "> is required");
                 }
             }
 
@@ -256,7 +256,7 @@ public class CmdLineParser {
             for (final Setter<?> setter : optionSetters) {
                 if (setter.option.choiceGroup().length() > 0
                         && !observedChoiceGroups.contains(setter.option.choiceGroup())) {
-                    throw new CmdLineException(this, "One of "
+                    throw new CmdLineException("One of "
                             + choiceGroupSummary(setter.option.choiceGroup()) + " is required");
                 }
             }
@@ -264,7 +264,7 @@ public class CmdLineParser {
             // make sure that all mandatory arguments are present
             for (final Setter<?> setter : argumentSetters) {
                 if (setter.argument.required() && !observedSetters.contains(setter)) {
-                    throw new CmdLineException(this, "Argument <" + setter.parameterName() + "> is required");
+                    throw new CmdLineException("Argument <" + setter.parameterName() + "> is required");
                 }
             }
         }
@@ -339,7 +339,7 @@ public class CmdLineParser {
                         .newInstance(this);
                 argumentParsers.put(argumentClass.getName(), p);
             } catch (Exception e) {
-                throw new CmdLineException(this, "Illegal parser class: " + e.getMessage());
+                throw new CmdLineException("Illegal parser class: " + e.getMessage());
             }
         }
     }

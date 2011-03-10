@@ -185,23 +185,6 @@ public class TestArgs4J {
         assertEquals("string2", s._string2);
     }
 
-    /*
-     * Bug 5: Option without "usage" are hidden. TODO: it seems that this is intended:
-     * http://weblogs.java.net/blog/kohsuke/archive/2005/05/parsing_command.html An @option without "usage"
-     * should not be displayed? If there is no usage information, the CmdLineParser.printOption() methods do
-     * explitly nothing.
-     * 
-     * TODO Change this behavior
-     */
-    // public void _testUsage() {
-    // args = new String[]{"-wrong"};
-    // try {
-    // parser.parseArgument(args);
-    // } catch (final CmdLineException e) {
-    // assertUsageContains("Usage does not contain -nu option", "-nu");
-    // }
-    // }
-
     @Test
     public void testEnum() throws CmdLineException {
         assertEquals(Enum.Animal.HORSE, parseArgs(new Enum(), "-animal", "HORSE").myAnimal);
@@ -362,7 +345,6 @@ public class TestArgs4J {
             fail("Expected CmdLineException");
         } catch (CmdLineException expected) {
             assertEquals("Argument <arg1> is required", expected.getMessage());
-            assertEquals(sb.toString(), expected.getFullUsageMessage());
         }
 
         // Verify usage message for invalid input displays argument metaVar or number if no metaVar
@@ -378,17 +360,6 @@ public class TestArgs4J {
             fail("Expected CmdLineException");
         } catch (CmdLineException expected) {
             assertEquals("\"foo\" is not valid for argument <arg2>", expected.getMessage());
-        }
-    }
-
-    @Test
-    public void testUsageMessageLineWrapping() {
-        try {
-            parseArgs(new LongUsage(), "-wrong-usage");
-        } catch (CmdLineException e) {
-            String expectedUsage = " -LongNamedStringOption USE_A_NICE_STRING  : String option\n"
-                    + " -i arg                                    : Integer option\n";
-            assertEquals(expectedUsage, e.getFullUsageMessage());
         }
     }
 
@@ -420,72 +391,6 @@ public class TestArgs4J {
             assertEquals("<-o2> is not a valid option", expected.getMessage());
         }
     }
-
-    // @Test
-    // public void testProperties() throws CmdLineException {
-    // // Without specifying any properties
-    // assertEquals(0, parseArgs(new WithProperties(), "").properties.size());
-    //
-    // assertEquals("value1",
-    // parseArgs(new WithProperties(), "-O", "key1=value1").properties.getProperty("key1"));
-    //
-    // // Two properties
-    // WithProperties wp = new WithProperties();
-    // parseArgs(wp, "-O", "key1=value1", "-O", "key2=value2");
-    // assertEquals("value1", wp.properties.getProperty("key1"));
-    // assertEquals("value2", wp.properties.getProperty("key2"));
-    //
-    // // If duplicate keys are specified, the last instance should win
-    // wp = new WithProperties();
-    // parseArgs(wp, "-O", "key1=value1", "-O", "key2=value2", "-O", "key1=value1b");
-    // assertEquals("value1b", wp.properties.getProperty("key1"));
-    //
-    // // Key without value
-    // try {
-    // wp = new WithProperties();
-    // parseArgs(wp, "-O", "key1=");
-    // fail("Expected CmdLineException");
-    // } catch (CmdLineException expected) {
-    // assertTrue("Wrong error message.",
-    // expected.getFullUsageMessage().contains("Invalid property specification: 'key1='"));
-    // }
-    //
-    // // Value without key
-    // try {
-    // wp = new WithProperties();
-    // parseArgs(wp, "-O", "=value1");
-    // fail("Expected CmdLineException");
-    // } catch (CmdLineException expected) {
-    // assertTrue("Wrong error message.",
-    // expected.getFullUsageMessage().contains("Invalid property specification: '=value1'"));
-    // }
-    //
-    // /*
-    // * Note: if no '=' specified, we assume the option denotes a property file; see {@link
-    // * #testPropertiesFile}
-    // */
-    // }
-    //
-    // @Test
-    // public void testPropertiesFile() throws CmdLineException {
-    // WithProperties wp = new WithProperties();
-    // parseArgs(wp, "-O", getClass().getPackage().getName() + "props1.properties");
-    // assertEquals("value1", wp.properties.getProperty("key1"));
-    // assertEquals("value2", wp.properties.getProperty("key2"));
-    //
-    // // Two property files - one property overridden in second
-    // wp = new WithProperties();
-    // parseArgs(wp, "-O", getClass().getPackage().getName() + "props1.properties", "-O", getClass()
-    // .getPackage().getName() + "props2.properties");
-    // assertEquals("value3", wp.properties.getProperty("key3"));
-    // assertEquals("value1b", wp.properties.getProperty("key1"));
-    //
-    // // Override properties from a property file on the command-line
-    // wp = new WithProperties();
-    // parseArgs(wp, "-O", "key1=value1c", "-O", getClass().getPackage().getName() + "props1.properties");
-    // assertEquals("value2", wp.properties.getProperty("key2"));
-    // assertEquals("value1c", wp.properties.getProperty("key1"));
-    // }
 
     /*
      * ----------------------- Supporting bean classes -----------------------

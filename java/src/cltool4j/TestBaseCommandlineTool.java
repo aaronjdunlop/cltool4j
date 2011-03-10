@@ -437,7 +437,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         public boolean hidden = false;
         
         @Override
-        public void setup(final CmdLineParser parser) throws Exception {
+        public void setup() throws Exception {
             setupFlag = true;
         }
 

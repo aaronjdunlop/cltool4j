@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
  * @author Kohsuke Kawaguchi
  */
 public final class MethodSetter<T> extends Setter<T> {
-    private final CmdLineParser parser;
+
     private final Object bean;
     private final Method m;
     private T value;
@@ -20,7 +20,6 @@ public final class MethodSetter<T> extends Setter<T> {
     public MethodSetter(final CmdLineParser parser, final Object bean, final Method m) {
         super(m.getAnnotations(), (ArgumentParser<T>) parser.argumentParser(m.getParameterTypes()[0]));
 
-        this.parser = parser;
         this.bean = bean;
         this.m = m;
         if (m.getParameterTypes().length != 1) {
@@ -58,10 +57,10 @@ public final class MethodSetter<T> extends Setter<T> {
                         throw (Error) t;
                     }
                     // otherwise wrap
-                    throw new CmdLineException(parser, t);
+                    throw new CmdLineException(t);
                 }
 
-                throw new CmdLineException(parser, e);
+                throw new CmdLineException(e);
             }
 
         }

@@ -97,11 +97,8 @@ public abstract class BaseCommandlineTool {
     /**
      * Perform any tool-specific setup. This method will only be called once, even if the tool is threadable
      * and {@link #run()} is called by multiple threads.
-     * 
-     * @param parser The command-line parser which parsed the options. Use this parser instance if an
-     *            overriding implementation needs to throw a {@link CmdLineException}.
      */
-    protected void setup(final CmdLineParser parser) throws Exception {
+    protected void setup() throws Exception {
     }
 
     /**
@@ -238,11 +235,11 @@ public abstract class BaseCommandlineTool {
             // If it cannot be found, we'd prefer to fail here than after a potentially expensive setup() call
             if (inputFiles.length > 0 && inputFiles[0].length() > 0) {
                 if (!new File(inputFiles[0]).exists()) {
-                    throw new CmdLineException(parser, "Unable to find file: " + inputFiles[0]);
+                    throw new CmdLineException("Unable to find file: " + inputFiles[0]);
                 }
             }
 
-            setup(null);
+            setup();
         } catch (final CmdLineException e) {
             System.err.println(e.getMessage() + '\n');
             printUsage(parser, false);
