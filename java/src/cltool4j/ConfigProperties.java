@@ -37,6 +37,22 @@ public class ConfigProperties extends Properties {
     }
 
     /**
+     * Returns the value of the specified property
+     * 
+     * @param key
+     * @param defaultValue
+     * @return the value of the specified property or <code>defaultValue</code> if not set
+     */
+    @Override
+    public String getProperty(final String key, final String defaultValue) {
+        final String value = super.getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        return value;
+    }
+
+    /**
      * Parses the specified property as an integer.
      * 
      * @param key
@@ -44,6 +60,25 @@ public class ConfigProperties extends Properties {
      * @throws InvalidConfigurationException if the property is not set or cannot be parsed as an integer
      */
     public int getIntProperty(final String key) {
+        try {
+            return Integer.parseInt(getProperty(key));
+        } catch (NumberFormatException e) {
+            throw new InvalidConfigurationException(key, e.getMessage());
+        }
+    }
+
+    /**
+     * Parses the specified property as an integer.
+     * 
+     * @param key
+     * @param defaultValue
+     * @return the value of the specified property or <code>defaultValue</code> if not set
+     */
+    public int getIntProperty(final String key, final int defaultValue) {
+        if (!containsKey(key)) {
+            return defaultValue;
+        }
+
         try {
             return Integer.parseInt(getProperty(key));
         } catch (NumberFormatException e) {
@@ -67,6 +102,25 @@ public class ConfigProperties extends Properties {
     }
 
     /**
+     * Parses the specified property as a float.
+     * 
+     * @param key
+     * @param defaultValue
+     * @return the value of the specified property or <code>defaultValue</code> if not set
+     */
+    public float getFloatProperty(final String key, final float defaultValue) {
+        if (!containsKey(key)) {
+            return defaultValue;
+        }
+
+        try {
+            return Float.parseFloat(getProperty(key));
+        } catch (NumberFormatException e) {
+            throw new InvalidConfigurationException(key, e.getMessage());
+        }
+    }
+    
+    /**
      * Parses the specified property as an boolean.
      * 
      * @param key
@@ -81,6 +135,25 @@ public class ConfigProperties extends Properties {
         }
     }
 
+    /**
+     * Parses the specified property as a float.
+     * 
+     * @param key
+     * @param defaultValue
+     * @return the value of the specified property or <code>defaultValue</code> if not set
+     */
+    public boolean getBooleanProperty(final String key, final boolean defaultValue) {
+        if (!containsKey(key)) {
+            return defaultValue;
+        }
+
+        try {
+            return Boolean.parseBoolean(getProperty(key));
+        } catch (NumberFormatException e) {
+            throw new InvalidConfigurationException(key, e.getMessage());
+        }
+    }
+    
     /**
      * Merges the provided properties into global property storage, overwriting any conflicting keys (that is,
      * properties set in the provided {@link Properties} instance override those in the current global
