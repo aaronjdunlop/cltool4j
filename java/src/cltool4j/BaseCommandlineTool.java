@@ -288,6 +288,58 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
+     * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
+     * @throws IOException
+     */
+    protected Iterable<String> inputLines() throws IOException {
+        try {
+            return new Iterable<String>() {
+                final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+                String line = br.readLine();
+
+                @Override
+                public Iterator<String> iterator() {
+
+                    return new Iterator<String>() {
+
+                        @Override
+                        public boolean hasNext() {
+                            return line != null;
+                        }
+
+                        @Override
+                        public String next() {
+                            String tmp = line;
+                            try {
+                                line = br.readLine();
+                            } catch (IOException e) {
+                                line = null;
+                            }
+                            return tmp;
+                        }
+
+                        @Override
+                        public void remove() {
+                        }
+                    };
+                }
+            };
+        } catch (IOException e) {
+            return new LinkedList<String>();
+        }
+    }
+
+    /**
+     * Convenience method; returns STDIN as a {@link BufferedReader}.
+     * 
+     * @return BufferedReader
+     * @throws IOException
+     */
+    protected BufferedReader inputAsBufferedReader() throws IOException {
+        return new BufferedReader(new InputStreamReader(System.in));
+    }
+
+    /**
      * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
      * 
      * @param filename

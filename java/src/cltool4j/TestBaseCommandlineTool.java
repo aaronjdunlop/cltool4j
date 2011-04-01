@@ -49,6 +49,13 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     }
 
     @Test
+    public void testIterableCat() throws Exception {
+        final String input = "This is a\nthree-line\ntest.\n";
+        final String output = executeTool(new IterableCat(), "", input);
+        assertEquals(input, output);
+    }
+
+    @Test
     public void testDebugOutput() throws Exception {
         final String input = "This is a\nthree-line\ntest.\n";
 
@@ -456,6 +463,19 @@ public class TestBaseCommandlineTool extends ToolTestCase {
             final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             for (String s = br.readLine(); s != null; s = br.readLine()) {
                 System.out.println(s);
+            }
+        }
+    }
+
+    /**
+     * Uses the {@link BaseCommandlineTool#inputLines()} iteration method.
+     */
+    private static class IterableCat extends BaseCommandlineTool {
+
+        @Override
+        public void run() throws Exception {
+            for (final String line : inputLines()) {
+                System.out.println(line);
             }
         }
     }
