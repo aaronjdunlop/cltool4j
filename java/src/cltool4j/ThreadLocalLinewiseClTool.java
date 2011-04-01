@@ -1,7 +1,7 @@
 package cltool4j;
 
 
-public abstract class ThreadLocalLinewiseClTool<T> extends LinewiseCommandlineTool
+public abstract class ThreadLocalLinewiseClTool<T,R> extends LinewiseCommandlineTool<R>
 {
     ThreadLocal<T> threadLocal = new ThreadLocal<T>();
 
