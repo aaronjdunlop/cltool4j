@@ -16,26 +16,17 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-import cltool4j.args4j.Argument;
-import cltool4j.args4j.CmdLineException;
-import cltool4j.args4j.CmdLineParser;
-import cltool4j.args4j.EnumAliasMap;
-import cltool4j.args4j.IllegalAnnotationError;
-import cltool4j.args4j.Option;
-
 /**
  * Unit tests for Args4J. Most test scenarios require their own bean class, but the tests are generally fairly
  * simple, so all bean classes are implemented as inner classes of {@link TestArgs4J}.
  * 
  * @author Aaron Dunlop
- * 
- *         $Id$
  */
 @SuppressWarnings("unused")
 public class TestArgs4J {
 
-    private <T extends Object> T parseArgs(T bean, String... args) throws CmdLineException {
-        CmdLineParser parser = new CmdLineParser(bean);
+    private <T extends Object> T parseArgs(final T bean, final String... args) throws CmdLineException {
+        final CmdLineParser parser = new CmdLineParser(bean);
         parser.setUsageWidth(120);
         parser.parseArguments(args);
         return bean;
@@ -79,9 +70,9 @@ public class TestArgs4J {
         try {
             parseArgs(new NativeTypeOptions(), "-int");
             fail("Expected CmdLineException");
-        } catch (CmdLineException e) {
-            String expectedError = "Option <-int> takes an operand";
-            String errorMessage = e.getMessage();
+        } catch (final CmdLineException e) {
+            final String expectedError = "Option <-int> takes an operand";
+            final String errorMessage = e.getMessage();
             assertTrue("Wrong error message: " + errorMessage, errorMessage.startsWith(expectedError));
         }
     }
@@ -91,7 +82,7 @@ public class TestArgs4J {
         try {
             parseArgs(new NativeTypeOptions(), "-boolean", "foo");
             fail("Expected CmdLineException");
-        } catch (CmdLineException e) {
+        } catch (final CmdLineException e) {
             assertEquals("No arguments allowed", e.getMessage());
             return;
         }
@@ -102,7 +93,7 @@ public class TestArgs4J {
         try {
             parseArgs(new NativeTypeOptions(), "-int", "foo");
             fail("Expected CmdLineException");
-        } catch (CmdLineException e) {
+        } catch (final CmdLineException e) {
             assertEquals("\"foo\" is not a valid argument for -int", e.getMessage());
             return;
         }
@@ -137,7 +128,7 @@ public class TestArgs4J {
         try {
             parseArgs(new WithRequiredOptions());
             fail("Expected CmdLineException");
-        } catch (CmdLineException e) {
+        } catch (final CmdLineException e) {
             assertEquals("Option <-o1> is required", e.getMessage());
         }
     }
@@ -148,14 +139,14 @@ public class TestArgs4J {
         try {
             parseArgs(new WithRequiredArguments());
             fail("Expected CmdLineException");
-        } catch (CmdLineException e) {
+        } catch (final CmdLineException e) {
             assertEquals("Argument <arg1> is required", e.getMessage());
         }
 
         try {
             parseArgs(new WithRequiredArguments(), "1");
             fail("Expected CmdLineException");
-        } catch (CmdLineException e) {
+        } catch (final CmdLineException e) {
             assertEquals("Argument <arg2> is required", e.getMessage());
         }
     }
@@ -179,7 +170,7 @@ public class TestArgs4J {
 
     @Test
     public void testInheritance() throws CmdLineException {
-        Subclass s = new Subclass();
+        final Subclass s = new Subclass();
         parseArgs(s, "-string", "string1", "-string2", "string2");
         assertEquals("string1", s._string);
         assertEquals("string2", s._string2);
@@ -296,7 +287,7 @@ public class TestArgs4J {
     @Test
     public void testMultivaluedArguments() throws Exception {
         // Using multiple options
-        WithMultivaluedListArgument mvl = parseArgs(new WithMultivaluedListArgument(), "one", "two");
+        final WithMultivaluedListArgument mvl = parseArgs(new WithMultivaluedListArgument(), "one", "two");
         assertEquals("Expected two values", 2, mvl.list.size());
         assertEquals("one", mvl.list.get(0));
         assertEquals("two", mvl.list.get(1));
@@ -305,7 +296,7 @@ public class TestArgs4J {
          * Test multivalued parsing with separators
          */
 
-        WithMultivaluedArrayArgument mva = parseArgs(new WithMultivaluedArrayArgument(), "1", "2,3,4");
+        final WithMultivaluedArrayArgument mva = parseArgs(new WithMultivaluedArrayArgument(), "1", "2,3,4");
         assertEquals("Expected four values", 4, mva.array.length);
         assertEquals(1, mva.array[0]);
         assertEquals(2, mva.array[1]);
@@ -343,7 +334,7 @@ public class TestArgs4J {
         try {
             parseArgs(new WithRequiredArguments());
             fail("Expected CmdLineException");
-        } catch (CmdLineException expected) {
+        } catch (final CmdLineException expected) {
             assertEquals("Argument <arg1> is required", expected.getMessage());
         }
 
@@ -351,14 +342,14 @@ public class TestArgs4J {
         try {
             parseArgs(new WithRequiredArguments(), "foo");
             fail("Expected CmdLineException");
-        } catch (CmdLineException expected) {
+        } catch (final CmdLineException expected) {
             assertEquals("\"foo\" is not valid for argument <arg1>", expected.getMessage());
         }
 
         try {
             parseArgs(new WithRequiredArguments(), "1", "foo");
             fail("Expected CmdLineException");
-        } catch (CmdLineException expected) {
+        } catch (final CmdLineException expected) {
             assertEquals("\"foo\" is not valid for argument <arg2>", expected.getMessage());
         }
     }
@@ -387,7 +378,7 @@ public class TestArgs4J {
             // Test with -o2 - this should fail, since the required resource isn't in CLASSPATH
             parseArgs(new WithRequiredResource(), "-o2");
             fail("Expected CmdLineException");
-        } catch (CmdLineException expected) {
+        } catch (final CmdLineException expected) {
             assertEquals("<-o2> is not a valid option", expected.getMessage());
         }
     }
@@ -426,12 +417,12 @@ public class TestArgs4J {
         public String _string = "string";
 
         @Option(name = "-stringmethod")
-        public void setString(String newString) {
+        public void setString(final String newString) {
             _string = newString;
         }
 
         @Option(name = "-intmethod")
-        public void setInt(int newInt) {
+        public void setInt(final int newInt) {
             _int = newInt;
         }
     }
@@ -446,7 +437,7 @@ public class TestArgs4J {
         public int _int2 = 10;
 
         @Argument(index = 2)
-        public void setInt2(int newInt2) {
+        public void setInt2(final int newInt2) {
             _int2 = newInt2;
         }
 
@@ -458,7 +449,7 @@ public class TestArgs4J {
         public String _string2 = "default2";
 
         @Argument(index = 5)
-        public void setString2(String newString2) {
+        public void setString2(final String newString2) {
             _string2 = newString2;
         }
 

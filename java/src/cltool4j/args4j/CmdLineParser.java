@@ -20,34 +20,23 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
- * Command line argument owner.
+ * Command line argument parser.
  * 
- * <p>
- * For a typical usage, see <a
- * href="https://args4j.dev.java.net/source/browse/args4j/args4j/examples/SampleMain.java?view=markup">this
- * example</a>.
- * 
- * @author Kohsuke Kawaguchi (kk@kohsuke.org)
+ * @author Kohsuke Kawaguchi
  */
 public class CmdLineParser {
 
-    /**
-     * Known {@link ArgumentParser}s, mapped by class name.
-     */
+    /** Known {@link ArgumentParser}s, mapped by class name. */
     private final Map<String, ArgumentParser<?>> argumentParsers = new HashMap<String, ArgumentParser<?>>();
 
-    /**
-     * Discovered {@link Setter}s for options.
-     */
+    /** Discovered {@link Setter}s for options. */
     private final ArrayList<Setter<?>> optionSetters = new ArrayList<Setter<?>>();
 
     private final Map<String, Setter<?>> optionSettersByName = new HashMap<String, Setter<?>>();
 
     private final Map<String, LinkedList<Setter<?>>> optionSettersByChoiceGroup = new HashMap<String, LinkedList<Setter<?>>>();
 
-    /**
-     * Discovered {@link Setter}s for arguments.
-     */
+    /** Discovered {@link Setter}s for arguments. */
     private final List<Setter<?>> argumentSetters = new ArrayList<Setter<?>>();
 
     /**
@@ -60,41 +49,27 @@ public class CmdLineParser {
      * Creates a new command line owner that parses arguments/options and set them into the given object.
      * 
      * @param bean instance of a class annotated by {@link Option} and {@link Argument}. this object will
-     *            receive values. If this is null, the processing will be skipped, which is useful if you'd
-     *            like to feed metadata from other sources.
+     *            receive values.
      * @throws CmdLineException
      * 
      * @throws IllegalAnnotationError if the option bean class is using args4j annotations incorrectly.
      */
-    public CmdLineParser(final Object bean, Map<Class<?>, Class<ArgumentParser<?>>> customArgumentParsers)
-            throws CmdLineException {
-        // A 'return' in the constructor just skips the rest of the implementation
-        // and returns the new object directly.
-        if (bean == null)
-            return;
+    public CmdLineParser(final Object bean) throws CmdLineException {
 
         registerDefaultParsers();
 
-        if (customArgumentParsers != null) {
-            registerParsers(customArgumentParsers);
-        }
-
         // Parse the metadata and create the setters
         new ClassParser().parse(bean, this);
-
-    }
-
-    public CmdLineParser(final Object bean) throws CmdLineException {
-        this(bean, null);
     }
 
     /**
-     * Programmatically defines an argument (instead of reading it from annotations like you normally do.)
+     * Adds an argument to the the list of those which will be parsed, and the {@link Setter} which should be
+     * invoked if and when the argument is observed. Used by {@link ClassParser}.
      * 
      * @param setter the setter for the type
-     * @param a the Argument
+     * @param a the {@link Argument}
      */
-    public <T> void addArgument(final Setter<T> setter, final Argument a) {
+    <T> void addArgument(final Setter<T> setter, final Argument a) {
 
         final int argumentIndex = a.index();
         if (setter.isMultiValued()) {
@@ -114,7 +89,7 @@ public class CmdLineParser {
 
             // Ensure no multi-valued arguments precede the new argument
             for (int i = 0; i < argumentIndex && i < argumentSetters.size(); i++) {
-                Setter<?> previousSetter = argumentSetters.get(i);
+                final Setter<?> previousSetter = argumentSetters.get(i);
                 if (previousSetter != null && previousSetter.isMultiValued()) {
                     throw new IllegalAnnotationError("Argument follows multivalued argument");
                 }
@@ -131,12 +106,13 @@ public class CmdLineParser {
     }
 
     /**
-     * Programmatically defines an option (instead of reading it from annotations like you normally do.)
+     * Adds an option to the the list of those which will be parsed, and the {@link Setter} which should be
+     * invoked if and when the option is observed. Used by {@link ClassParser}.
      * 
      * @param setter the setter for the type
-     * @param o the Option
+     * @param o the {@link Option}
      */
-    public <T> void addOption(final Setter<T> setter, final Option o) {
+    <T> void addOption(final Setter<T> setter, final Option o) {
         if (optionSettersByName.get(o.name()) != null) {
             throw new IllegalAnnotationError("Option name <" + o.name() + "> is used more than once");
         }
@@ -206,9 +182,9 @@ public class CmdLineParser {
 
                 try {
                     setter.parseNextOperand(parameters);
-                } catch (NoSuchElementException e) {
+                } catch (final NoSuchElementException e) {
                     throw new CmdLineException("Option <" + optionName + "> takes an operand");
-                } catch (IllegalArgumentException e) {
+                } catch (final IllegalArgumentException e) {
                     throw new CmdLineException("\"" + parameters.current()
                             + "\" is not a valid argument for " + optionName);
                 }
@@ -229,9 +205,9 @@ public class CmdLineParser {
                 }
                 try {
                     setter.parseNextArgument(parameters);
-                } catch (IllegalArgumentException e) {
-                    throw new CmdLineException("\"" + parameters.current()
-                            + "\" is not valid for argument <" + setter.parameterName() + ">");
+                } catch (final IllegalArgumentException e) {
+                    throw new CmdLineException("\"" + parameters.current() + "\" is not valid for argument <"
+                            + setter.parameterName() + ">");
                 }
             }
             observedSetters.add(setter);
@@ -256,8 +232,8 @@ public class CmdLineParser {
             for (final Setter<?> setter : optionSetters) {
                 if (setter.option.choiceGroup().length() > 0
                         && !observedChoiceGroups.contains(setter.option.choiceGroup())) {
-                    throw new CmdLineException("One of "
-                            + choiceGroupSummary(setter.option.choiceGroup()) + " is required");
+                    throw new CmdLineException("One of " + choiceGroupSummary(setter.option.choiceGroup())
+                            + " is required");
                 }
             }
 
@@ -301,9 +277,9 @@ public class CmdLineParser {
 
     private String choiceGroupSummary(final String choiceGroup) {
         final StringBuilder sb = new StringBuilder();
-        LinkedList<Setter<?>> list = optionSettersByChoiceGroup.get(choiceGroup);
-        for (Iterator<Setter<?>> i = list.iterator(); i.hasNext();) {
-            Setter<?> setter = i.next();
+        final LinkedList<Setter<?>> list = optionSettersByChoiceGroup.get(choiceGroup);
+        for (final Iterator<Setter<?>> i = list.iterator(); i.hasNext();) {
+            final Setter<?> setter = i.next();
             if (sb.length() > 0) {
                 if (i.hasNext()) {
                     sb.append(", ");
@@ -317,37 +293,23 @@ public class CmdLineParser {
     }
 
     /**
-     * Registers a user-defined {@link Parser} class with args4j. This method allows users to extend the
-     * behavior of args4j by writing their own {@link Parser} implementations.
+     * Registers a user-defined {@link ArgumentParser} class with args4j. This method allows users to extend
+     * the behavior of args4j by writing their own {@link ArgumentParser} implementations.
      * 
-     * @param parser A {@link Parser} instance capable of parsing the specified types
+     * @param parser A {@link ArgumentParser} instance capable of parsing the specified types
      * @param argumentClasses The specified parser is used when the field/method annotated by {@link Option}
      *            is of this type.
      */
     public void registerParser(final ArgumentParser<?> parser, final Class<?>... argumentClasses) {
-        for (Class<?> argumentClass : argumentClasses) {
+        for (final Class<?> argumentClass : argumentClasses) {
             argumentParsers.put(argumentClass.getName(), parser);
         }
     }
 
-    private void registerParsers(final Map<Class<?>, Class<ArgumentParser<?>>> customArgumentParsers)
-            throws CmdLineException {
-        for (Class<?> argumentClass : customArgumentParsers.keySet()) {
-            Class<?> parserClass = customArgumentParsers.get(argumentClass);
-            try {
-                ArgumentParser<?> p = (ArgumentParser<?>) parserClass.getConstructor(CmdLineParser.class)
-                        .newInstance(this);
-                argumentParsers.put(argumentClass.getName(), p);
-            } catch (Exception e) {
-                throw new CmdLineException("Illegal parser class: " + e.getMessage());
-            }
-        }
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <T> ArgumentParser<T> argumentParser(Class<T> argumentClass) {
+    public <T> ArgumentParser<T> argumentParser(final Class<T> argumentClass) {
 
-        // enum is a special case
+        // Enums are a special case
         if (Enum.class.isAssignableFrom(argumentClass)) {
             return new EnumParser(this, argumentClass);
         }
@@ -369,7 +331,7 @@ public class CmdLineParser {
      * @param includeHiddenOptions Include options marked as 'hidden'
      */
     public void printOneLineUsage(final Writer out, final boolean includeHiddenOptions) {
-        PrintWriter w = new PrintWriter(out);
+        final PrintWriter w = new PrintWriter(out);
         for (final Setter<?> s : optionSetters) {
             if (!s.option.hidden() || includeHiddenOptions) {
                 final String metaVar = s.option.metaVar().length() > 0 ? " " + s.option.metaVar() : "";
@@ -493,14 +455,14 @@ public class CmdLineParser {
 
         registerParser(new ArgumentParser<Byte>() {
             @Override
-            public Byte parse(String arg) throws NumberFormatException {
+            public Byte parse(final String arg) throws NumberFormatException {
                 return Byte.parseByte(arg);
             }
         }, Byte.class, byte.class);
 
         registerParser(new ArgumentParser<Character>() {
             @Override
-            public Character parse(String arg) {
+            public Character parse(final String arg) {
                 if (arg.length() != 1) {
                     throw new IllegalArgumentException();
                 }
@@ -510,21 +472,21 @@ public class CmdLineParser {
 
         registerParser(new ArgumentParser<Double>() {
             @Override
-            public Double parse(String arg) throws NumberFormatException {
+            public Double parse(final String arg) throws NumberFormatException {
                 return Double.parseDouble(arg);
             }
         }, Double.class, double.class);
 
         registerParser(new ArgumentParser<File>() {
             @Override
-            public File parse(String arg) throws NumberFormatException {
+            public File parse(final String arg) throws NumberFormatException {
                 return new File(arg);
             }
         }, File.class);
 
         registerParser(new ArgumentParser<Float>() {
             @Override
-            public Float parse(String arg) throws NumberFormatException {
+            public Float parse(final String arg) throws NumberFormatException {
                 return Float.parseFloat(arg);
             }
         }, Float.class, float.class);
@@ -533,31 +495,31 @@ public class CmdLineParser {
 
         registerParser(new ArgumentParser<Long>() {
             @Override
-            public Long parse(String arg) throws NumberFormatException {
+            public Long parse(final String arg) throws NumberFormatException {
                 return Long.parseLong(arg);
             }
         }, Long.class, long.class);
 
         registerParser(new ArgumentParser<Short>() {
             @Override
-            public Short parse(String arg) throws NumberFormatException {
+            public Short parse(final String arg) throws NumberFormatException {
                 return Short.parseShort(arg);
             }
         }, Short.class, short.class);
 
         registerParser(new ArgumentParser<String>() {
             @Override
-            public String parse(String s) {
+            public String parse(final String s) {
                 return s;
             }
         }, String.class);
 
         registerParser(new ArgumentParser<URI>() {
             @Override
-            public URI parse(String arg) {
+            public URI parse(final String arg) {
                 try {
                     return new URI(arg);
-                } catch (URISyntaxException e) {
+                } catch (final URISyntaxException e) {
                     throw new IllegalArgumentException();
                 }
             }
@@ -565,10 +527,10 @@ public class CmdLineParser {
 
         registerParser(new ArgumentParser<URL>() {
             @Override
-            public URL parse(String arg) {
+            public URL parse(final String arg) {
                 try {
                     return new URL(arg);
-                } catch (MalformedURLException e) {
+                } catch (final MalformedURLException e) {
                     throw new IllegalArgumentException();
                 }
             }
@@ -578,7 +540,7 @@ public class CmdLineParser {
         registerParser(new CalendarParser(), Calendar.class);
         registerParser(new ArgumentParser<Date>() {
             @Override
-            public Date parse(String arg) throws IllegalArgumentException {
+            public Date parse(final String arg) throws IllegalArgumentException {
                 return CalendarParser.parseDate(arg).getTime();
             }
         }, Date.class);

@@ -1,12 +1,12 @@
 package cltool4j.args4j;
 
-
 /**
  * Code that parses arguments or operands of an option and populates member fields or methods.
  * 
- * This class can be extended by application to support additional Java datatypes in option operands.
+ * This class can be extended by application to support additional Java data types in option operands.
  * 
- * Implementations of this class must be registered using {@link CmdLineParser#registerParser(Class,Class)}
+ * Implementations of this class must be registered using
+ * {@link CmdLineParser#registerParser(ArgumentParser, Class...)}
  * 
  * @param <T> The type of the field that this {@link ArgumentParser} works with.
  * 
@@ -34,30 +34,29 @@ public abstract class ArgumentParser<T> {
      * 
      * @throws IllegalArgumentException if parsing is not possible
      */
-    public T parseNextOperand(Parameters parameters) throws IllegalArgumentException {
+    public T parseNextOperand(final Parameters parameters) throws IllegalArgumentException {
         return parse(parameters.next());
     }
 
     /**
-     * Parse an argument to an object of Type <code>T<code>.
+     * Parse an argument to an object of type <code>T<code>.
      * 
      * @param parameters Command-line parameters
      * @return the parsed value
      * 
      * @throws IllegalArgumentException if parsing is not possible
      */
-    public T parseNextArgument(Parameters parameters) throws IllegalArgumentException {
+    public T parseNextArgument(final Parameters parameters) throws IllegalArgumentException {
         return parse(parameters.next());
     }
 
     /**
-     * Parses a single argument to an object of Type <code>T<code>.
+     * Parses a single argument to an object of type <code>T<code>.
      * 
      * @param arg String value to parse
      * @return the parsed value
      * 
      * @throws IllegalArgumentException if parsing is not possible
-     * @throws CmdLineException if the parsing encounters a failure that should be reported to the user.
      */
     public abstract T parse(String arg) throws IllegalArgumentException;
 

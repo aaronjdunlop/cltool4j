@@ -2,15 +2,21 @@
 
 <project name="cltool" default="dist" basedir=".">
 
-    <target name="dist" depends="compile" description="Build release jar">
-        <jar basedir="build" file="build/cltool4j.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" /> 
-        <jar basedir="java/src" file="build/cltool4j-src.jar" includes="**/*.java" /> 
+    <target name="doc" description="Package JavaDoc">
+        <javadoc destdir="build/javadoc" classpath="java/lib/junit.jar:java/lib/log4j.jar">
+            <fileset dir="java/src" includes="**/*.java" excludes="**/Test*.java,**/Profile*.java,**/All*Tests.java,**/*TestCase.java" />
+        </javadoc>
     </target>
-    
+
     <target name="compile" description="Compile">
         <delete dir="build" failonerror="false"/>
         <mkdir dir="build" />
         <javac srcdir="java/src" destdir="build" classpath="java/lib/junit.jar:java/lib/log4j.jar" debug="true" includeantruntime="false" />
     </target>
 
+	<target name="dist" depends="compile" description="Build release jar">
+        <jar basedir="build" file="build/cltool4j.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" /> 
+        <jar basedir="java/src" file="build/cltool4j-src.jar" includes="**/*.java" /> 
+    </target>
+    
 </project>

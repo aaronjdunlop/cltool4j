@@ -5,11 +5,8 @@ package cltool4j;
  * Populated via command-line arguments, a configuration property file, or properties from a
  * application-specific model file.
  * 
- * 
- * @author aarond
+ * @author Aaron Dunlop
  * @since Oct 2010
- * 
- *        $Id$
  */
 public class GlobalConfigProperties extends ConfigProperties {
 

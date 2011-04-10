@@ -8,17 +8,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-
 /**
- * Argument of the command line.
- * 
- * This works mostly like {@link Option} except the following differences.
- * 
- * <ol>
- * <li>Arguments have an index about their relative position on the command line.
- * </ol>
- * 
- * TODO Support separator on arguments?
+ * Represents an argument on the command-line. Processing of {@link Argument}s is very similar to that of
+ * {@link Option}s, although not all parameters of {@link Option} are supported. The one additional parameter,
+ * {@link Argument#index()}, denotes the argument's position in the command-line.
  * 
  * @author Kohsuke Kawaguchi
  * @author Mark Sinke
@@ -26,46 +19,35 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD, PARAMETER })
 public @interface Argument {
-    /**
-     * See {@link Option#usage()}.
-     */
+
+    /** See {@link Option#usage()}. */
     String usage() default "";
 
-    /**
-     * See {@link Option#metaVar()}.
-     */
+    /** See {@link Option#metaVar()}. */
     String metaVar() default "";
 
-    /**
-     * See {@link Option#required()}.
-     */
+    /** See {@link Option#required()}. */
     boolean required() default false;
 
-    /**
-     * See {@link Option#parser()}.
-     */
+    /** See {@link Option#parser()}. */
     @SuppressWarnings("rawtypes")
-    Class<? extends ArgumentParser> handler() default ArgumentParser.class;
+    Class<? extends ArgumentParser> parser() default ArgumentParser.class;
 
     /**
-     * Position of the argument.
+     * Position of the argument.<br/>
+     * <br/>
      * 
-     * <p>
      * If you define multiple single value properties to bind to arguments, they should have index=0, index=1,
-     * index=2, ... and so on.
+     * index=2, ... and so on.<br/>
+     * <br/>
      * 
-     * <p>
-     * Multi value properties bound to arguments must be always the last entry.
+     * If a multi-valued property is annotated with {@link Argument}, its index must be the highest.
      */
     int index() default 0;
 
-    /**
-     * See {@link Option#multiValued()}.
-     */
+    /** See {@link Option#multiValued()}. */
     boolean multiValued() default false;
 
-    /**
-     * See {@link Option#separator()}.
-     */
+    /** See {@link Option#separator()}. */
     String separator() default "";
 }

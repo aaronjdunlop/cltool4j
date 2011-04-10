@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 /**
  * A bidirectional iterator over a {@link String} array. Allows lookahead and forward or backward iteration.
  */
-public class Parameters {
+class Parameters {
 
     private final String[] args;
     private int pos;

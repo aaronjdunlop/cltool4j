@@ -4,6 +4,33 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+/**
+ * Maps aliases to {@link java.lang.Enum} values. This allows use of long (and descriptive) enumeration names
+ * in code and shorter versions for use on the command-line.<br/>
+ * <br/>
+ * 
+ * If aliases are mapped for an enum, they will be considered equivalent to the full enum name on the
+ * command-line and will be displayed along with alias names in usage information.<br/>
+ * <br/>
+ * 
+ * Note: Enumeration and alias parsing is always case-insensitive.<br/>
+ * <br/>
+ * 
+ * Example usage:<br/>
+ * 
+ * <pre>
+ * public enum E {
+ *     // Accept 'a', 'b', and 'optionb' as well as the enumerations themselves
+ *     VeryLongOptionNameA(&quot;a&quot;), VeryLongOptionNameB(&quot;b&quot;, &quot;optionb&quot;);
+ * 
+ *     private E(final String... aliases) {
+ *         EnumAliasMap.singleton().addAliases(this, aliases);
+ *     }
+ * }
+ * </pre>
+ * 
+ * @author Aaron Dunlop
+ */
 public final class EnumAliasMap {
 
     private final static EnumAliasMap singletonInstance = new EnumAliasMap();

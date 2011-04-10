@@ -3,22 +3,23 @@ package cltool4j.args4j;
 import java.lang.annotation.Annotation;
 
 /**
- * TODO Documentation.
+ * Base 'setter' class. A {@link Setter} implementation assigns values to either an object's member
+ * {@link java.lang.reflect.Field}s or {@link java.lang.reflect.Method}s.
  * 
  * @author Kohsuke Kawaguchi
  * @author Aaron Dunlop
  */
 public abstract class Setter<T> {
 
-    /**
-     * The annotation.
-     */
+    /** {@link Option} annotation (one of {@link #argument} or {@link #option} must be set). */
     public final Option option;
+
+    /** {@link Option} annotation (one of {@link #argument} or {@link #option} must be set). */
     public final Argument argument;
 
     public final ArgumentParser<T> argumentParser;
 
-    protected Setter(Annotation[] annotations, ArgumentParser<T> argumentParser) {
+    protected Setter(final Annotation[] annotations, final ArgumentParser<T> argumentParser) {
         if (annotations[0] instanceof Option) {
             this.option = (Option) annotations[0];
             this.argument = null;
@@ -36,7 +37,8 @@ public abstract class Setter<T> {
      * @throws IllegalArgumentException if parsing is not possible
      * @throws CmdLineException
      */
-    public void parseNextOperand(Parameters parameters) throws IllegalArgumentException, CmdLineException {
+    public void parseNextOperand(final Parameters parameters) throws IllegalArgumentException,
+            CmdLineException {
         addValue(argumentParser.parseNextOperand(parameters));
     }
 
@@ -47,7 +49,8 @@ public abstract class Setter<T> {
      * @throws IllegalArgumentException if parsing is not possible
      * @throws CmdLineException
      */
-    public void parseNextArgument(Parameters parameters) throws IllegalArgumentException, CmdLineException {
+    public void parseNextArgument(final Parameters parameters) throws IllegalArgumentException,
+            CmdLineException {
         addValue(argumentParser.parseNextArgument(parameters));
     }
 
@@ -80,13 +83,13 @@ public abstract class Setter<T> {
         }
 
         // Option name
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         sb.append(option.name());
 
         // Include any aliases (e.g. --long-usage) in parentheses
         if (option.aliases().length > 0) {
             sb.append(" (");
-            for (String alias : option.aliases()) {
+            for (final String alias : option.aliases()) {
                 sb.append(alias);
                 sb.append(',');
             }

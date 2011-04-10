@@ -9,11 +9,8 @@ import java.util.Properties;
  * singleton subclass {@link GlobalConfigProperties}. This implementation allows programmatic configuration as
  * well (e.g., for unit testing).
  * 
- * 
  * @author Aaron Dunlop
  * @since Oct 2010
- * 
- *        $Id$
  */
 public class ConfigProperties extends Properties {
 
@@ -62,7 +59,7 @@ public class ConfigProperties extends Properties {
     public int getIntProperty(final String key) {
         try {
             return Integer.parseInt(getProperty(key));
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new InvalidConfigurationException(key, e.getMessage());
         }
     }
@@ -81,7 +78,7 @@ public class ConfigProperties extends Properties {
 
         try {
             return Integer.parseInt(getProperty(key));
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new InvalidConfigurationException(key, e.getMessage());
         }
     }
@@ -96,7 +93,7 @@ public class ConfigProperties extends Properties {
     public float getFloatProperty(final String key) {
         try {
             return Float.parseFloat(getProperty(key));
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new InvalidConfigurationException(key, e.getMessage());
         }
     }
@@ -115,11 +112,11 @@ public class ConfigProperties extends Properties {
 
         try {
             return Float.parseFloat(getProperty(key));
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new InvalidConfigurationException(key, e.getMessage());
         }
     }
-    
+
     /**
      * Parses the specified property as an boolean.
      * 
@@ -130,7 +127,7 @@ public class ConfigProperties extends Properties {
     public boolean getBooleanProperty(final String key) {
         try {
             return Boolean.parseBoolean(getProperty(key));
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new InvalidConfigurationException(key, e.getMessage());
         }
     }
@@ -149,11 +146,11 @@ public class ConfigProperties extends Properties {
 
         try {
             return Boolean.parseBoolean(getProperty(key));
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new InvalidConfigurationException(key, e.getMessage());
         }
     }
-    
+
     /**
      * Merges the provided properties into global property storage, overwriting any conflicting keys (that is,
      * properties set in the provided {@link Properties} instance override those in the current global
@@ -161,7 +158,7 @@ public class ConfigProperties extends Properties {
      * 
      * @param newProperties
      */
-    public void mergeOver(Properties newProperties) {
+    public void mergeOver(final Properties newProperties) {
         for (final Object key : newProperties.keySet()) {
             setProperty((String) key, newProperties.getProperty((String) key));
         }
@@ -173,7 +170,7 @@ public class ConfigProperties extends Properties {
      * 
      * @param newProperties
      */
-    public void mergeUnder(Properties newProperties) {
+    public void mergeUnder(final Properties newProperties) {
         for (final Object key : newProperties.keySet()) {
             if (!containsKey(key)) {
                 setProperty((String) key, newProperties.getProperty((String) key));
@@ -183,14 +180,14 @@ public class ConfigProperties extends Properties {
 
     @Override
     public String toString() {
-        ArrayList<String> stringProps = new ArrayList<String>();
-        for (Object key : keySet()) {
+        final ArrayList<String> stringProps = new ArrayList<String>();
+        for (final Object key : keySet()) {
             stringProps.add((String) key + "=" + getProperty((String) key) + '\n');
         }
         Collections.sort(stringProps);
 
-        StringBuilder sb = new StringBuilder(128);
-        for (String property : stringProps) {
+        final StringBuilder sb = new StringBuilder(128);
+        for (final String property : stringProps) {
             sb.append(property);
         }
         // Remove final line feed

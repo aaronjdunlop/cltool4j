@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 /**
- * {@link Setter} that sets to a {@link Field}.
+ * {@link Setter} for member {@link Field}s.
  * 
  * @author Kohsuke Kawaguchi
  * @author Aaron Dunlop
@@ -68,7 +68,7 @@ public final class FieldSetter<T> extends Setter<T> {
             return defaultUsage;
         }
 
-        String defaultValueString = defaultValue.toString();
+        final String defaultValueString = defaultValue.toString();
 
         // Don't print 'Default = false' for booleans
         if (defaultValue instanceof Boolean && !((Boolean) defaultValue).booleanValue()) {
@@ -85,8 +85,7 @@ public final class FieldSetter<T> extends Setter<T> {
         if (isEnum()) {
 
             @SuppressWarnings("unchecked")
-            final String aliases = EnumAliasMap.singleton()
-                    .usage((Class<? extends Enum<?>>) f.getType());
+            final String aliases = EnumAliasMap.singleton().usage((Class<? extends Enum<?>>) f.getType());
 
             // If printing enum values one-per-line, print the default value on the first line; otherwise,
             // print it at the end of the list

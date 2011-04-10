@@ -7,13 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-
 /**
- * Analyzes Args4J annotations in the class hierarchy.
+ * Analyzes {@link Option} and {@link Argument} annotations in the class hierarchy. Called from
  * 
  * @author Jan Materne
  */
-public class ClassParser {
+class ClassParser {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void parse(final Object bean, final CmdLineParser parser) {
@@ -70,7 +69,7 @@ public class ClassParser {
     }
 
     @SuppressWarnings("rawtypes")
-    private Setter<?> createSetter(final Object bean, CmdLineParser parser, final Field f) {
+    private Setter<?> createSetter(final Object bean, final CmdLineParser parser, final Field f) {
 
         if (List.class.isAssignableFrom(f.getType()) || Set.class.isAssignableFrom(f.getType())
                 || f.getType().isArray()) {

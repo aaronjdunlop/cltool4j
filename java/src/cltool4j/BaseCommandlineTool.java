@@ -47,8 +47,6 @@ import cltool4j.args4j.Option;
  * 
  * @author Aaron Dunlop
  * @since Aug 14, 2008
- * 
- *        $Id$
  */
 public abstract class BaseCommandlineTool {
 
@@ -309,10 +307,10 @@ public abstract class BaseCommandlineTool {
 
                         @Override
                         public String next() {
-                            String tmp = line;
+                            final String tmp = line;
                             try {
                                 line = br.readLine();
-                            } catch (IOException e) {
+                            } catch (final IOException e) {
                                 line = null;
                             }
                             return tmp;
@@ -324,7 +322,7 @@ public abstract class BaseCommandlineTool {
                     };
                 }
             };
-        } catch (IOException e) {
+        } catch (final IOException e) {
             return new LinkedList<String>();
         }
     }
@@ -461,6 +459,8 @@ public abstract class BaseCommandlineTool {
 
     /**
      * Parses a date into a long (seconds since the epoch)
+     * 
+     * TODO Move into cltool4j.args4j package
      */
     public static class TimestampParser extends ArgumentParser<Long> {
 
@@ -540,11 +540,11 @@ public abstract class BaseCommandlineTool {
         InputStream currentStream;
         int currentFileIndex = -1;
 
-        public MultiInputStream(List<? extends InputStream> inputStreams) {
+        public MultiInputStream(final List<? extends InputStream> inputStreams) {
             this.streamIterator = inputStreams.iterator();
             try {
                 next();
-            } catch (IOException ex) {
+            } catch (final IOException ex) {
                 // This should never happen
                 throw new Error("panic");
             }
@@ -576,6 +576,7 @@ public abstract class BaseCommandlineTool {
          *         by invoking its {@link #close()} method
          * @exception IOException if an I/O error occurs.
          */
+        @Override
         public int available() throws IOException {
             if (currentStream == null) {
                 return 0; // no way to signal EOF from available()
@@ -587,11 +588,12 @@ public abstract class BaseCommandlineTool {
          * @return the next byte of data, or <code>-1</code> if the end of the stream is reached.
          * @exception IOException if an I/O error occurs.
          */
+        @Override
         public int read() throws IOException {
             if (currentStream == null) {
                 return -1;
             }
-            int c = currentStream.read();
+            final int c = currentStream.read();
             if (c == -1) {
                 next();
                 return read();
@@ -618,7 +620,8 @@ public abstract class BaseCommandlineTool {
          *                or <code>len</code> is greater than <code>b.length - off</code>
          * @exception IOException if an I/O error occurs.
          */
-        public int read(byte b[], int off, int len) throws IOException {
+        @Override
+        public int read(final byte b[], final int off, final int len) throws IOException {
             if (currentStream == null) {
                 return -1;
             } else if (b == null) {
@@ -629,7 +632,7 @@ public abstract class BaseCommandlineTool {
                 return 0;
             }
 
-            int n = currentStream.read(b, off, len);
+            final int n = currentStream.read(b, off, len);
             if (n <= 0) {
                 // TODO Insert a line-feed at the end of a file?
                 next();
@@ -644,6 +647,7 @@ public abstract class BaseCommandlineTool {
          * 
          * @exception IOException if an I/O error occurs.
          */
+        @Override
         public void close() throws IOException {
             do {
                 next();

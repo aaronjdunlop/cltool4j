@@ -12,10 +12,8 @@ import java.io.PrintStream;
 /**
  * Provides commonly-used functionality for testing command-line tools.
  * 
- * @author aarond
+ * @author Aaron Dunlop
  * @since Oct 21, 2009
- * 
- * @version $Revision$
  */
 public abstract class ToolTestCase {
     protected final static String UNIT_TEST_DIR = "unit-test-data/";

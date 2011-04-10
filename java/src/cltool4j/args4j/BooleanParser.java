@@ -3,11 +3,8 @@ package cltool4j.args4j;
 import java.util.HashMap;
 import java.util.Map;
 
-
 /**
  * Boolean {@link ArgumentParser}.
- * 
- * TODO Eliminate parsing of booleans? Or limit it to a multivalued handler
  * 
  * @author Kohsuke Kawaguchi
  */
@@ -27,18 +24,18 @@ public class BooleanParser extends ArgumentParser<Boolean> {
         ACCEPTABLE_VALUES.put("0", Boolean.FALSE);
     }
 
-    public BooleanParser(CmdLineParser parser) {
+    public BooleanParser(final CmdLineParser parser) {
         super();
     }
 
     @Override
-    public Boolean parseNextOperand(Parameters parameters) throws IllegalArgumentException {
+    public Boolean parseNextOperand(final Parameters parameters) throws IllegalArgumentException {
         // If we're 'parsing' a boolean option, don't consume another argument
         return true;
     }
 
     @Override
-    public Boolean parse(String arg) throws IllegalArgumentException {
+    public Boolean parse(final String arg) throws IllegalArgumentException {
 
         if (!ACCEPTABLE_VALUES.containsKey(arg)) {
             throw new IllegalArgumentException();
@@ -50,5 +47,4 @@ public class BooleanParser extends ArgumentParser<Boolean> {
     public String defaultMetaVar() {
         return null;
     }
-
 }

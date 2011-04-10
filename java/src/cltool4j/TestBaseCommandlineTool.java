@@ -23,15 +23,12 @@ import cltool4j.args4j.Option;
 /**
  * Unit tests for {@link BaseCommandlineTool}.
  * 
- * @author aarond
- * 
- *         $Id$
+ * @author Aaron Dunlop
  */
 public class TestBaseCommandlineTool extends ToolTestCase {
+
     /**
      * Verifies that the {@link BaseCommandlineTool#setup(CmdLineParser)} method is executed properly
-     * 
-     * @throws Exception
      */
     @Test
     public void testSetup() throws Exception {
@@ -48,6 +45,10 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         assertEquals(input, output);
     }
 
+    /**
+     * Tests iterating over input using the {@link java.lang.Iterable<String>} returned by
+     * {@link BaseCommandlineTool#inputLines()}.
+     */
     @Test
     public void testIterableCat() throws Exception {
         final String input = "This is a\nthree-line\ntest.\n";
@@ -63,7 +64,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("MaxThreads: 1\n");
         sb.append(input);
 
-        String output = executeTool(new Cat(), "-v debug", input);
+        final String output = executeTool(new Cat(), "-v debug", input);
         // Just in case the actual run took a measurable amount of time
 
         assertEquals(sb.toString(), output);
@@ -81,8 +82,6 @@ public class TestBaseCommandlineTool extends ToolTestCase {
      * Tests argument parsing. Pass three arguments to a class which declares one required and one optional
      * argument. We expect the declared arguments to be populated and the third to be considerd as an input
      * file.
-     * 
-     * @throws Exception
      */
     @Test
     public void testArguments() throws Exception {
@@ -97,8 +96,6 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     /**
      * Tests parsing required multi-value arguments. Tests a class which declares two arguments and required
      * multi-value args.
-     * 
-     * @throws Exception
      */
     @Test
     public void testRequiredMultivaluedArgument() throws Exception {
@@ -125,8 +122,6 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     /**
      * Tests parsing required multi-value arguments. Tests a class which declares two arguments and required
      * multi-value args.
-     * 
-     * @throws Exception
      */
     @Test
     public void testRequiredMultiValuedArgumentWithOtherArguments() throws Exception {
@@ -172,8 +167,6 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     /**
      * Tests parsing required multi-value arguments. Tests a class which declares optional single- and
      * multi-valued arguments.
-     * 
-     * @throws Exception
      */
     @Test
     public void testOptionalMultivaluedArgument() throws Exception {
@@ -259,8 +252,6 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
     /**
      * Tests line wrapping for long enum options
-     * 
-     * @throws Exception
      */
     @Test
     public void testWrappedEnumUsageOutput() throws Exception {
@@ -317,8 +308,6 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
     /**
      * Verifies that one and only one option from a 'choice group' is required
-     * 
-     * @throws Exception
      */
     @Test
     public void testChoiceGroup() throws Exception {
@@ -332,7 +321,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
         output = executeTool(tool, "-o1 1 -o2 1", "");
         assertTrue(output.startsWith("Only one of <-o1> or <-o2> is allowed"));
-        
+
         output = executeTool(tool, "-o1 1", "");
         assertTrue(output.startsWith(""));
         assertTrue(output.startsWith("One of <-o3>, <-o4>, or <-o5> is required"));
@@ -340,11 +329,12 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         output = executeTool(tool, "-o1 1 -o3 3 -o4 4", "");
         assertTrue(output.startsWith("Only one of <-o3>, <-o4>, or <-o5> is allowed"));
     }
-    
+
     @Test
     public void testFileAlerts() throws Exception {
         final Wc tool = new Wc();
-        String output = executeTool(tool, "unit-test-data/file1.txt unit-test-data/file2.txt", (InputStream) null);
+        final String output = executeTool(tool, "unit-test-data/file1.txt unit-test-data/file2.txt",
+                (InputStream) null);
         assertEquals("unit-test-data/file1.txt : 1\nunit-test-data/file2.txt : 2\n", output);
     }
 
@@ -381,8 +371,6 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     /**
      * Tests enumeration handling - both through case-insensitive lexical matching and through the forString()
      * method.
-     * 
-     * @throws Exception
      */
     @Test
     public void testEnumOptionHandler() throws Exception {
@@ -398,14 +386,13 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
         // Test a parse failure and usage info
         final String output = executeTool(tool, "2z", "");
-        assertTrue("Wrong error output: " + output, output.startsWith("\"2z\" is not valid for argument <enum>"));
+        assertTrue("Wrong error output: " + output,
+                output.startsWith("\"2z\" is not valid for argument <enum>"));
     }
 
     /**
      * Tests handling of global properties - specified on the command-line, in a properties file, and
      * overriding a properties file from the command-line.
-     * 
-     * @throws Exception
      */
     @Test
     public void testGlobalProperties() throws Exception {
@@ -429,7 +416,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         assertEquals(0.3f, GlobalConfigProperties.singleton().getFloatProperty("test.float"), .01f);
         try {
             assertEquals(2, GlobalConfigProperties.singleton().getProperty("test.unset"));
-        } catch (InvalidConfigurationException expected) {
+        } catch (final InvalidConfigurationException expected) {
         }
     }
 
@@ -442,7 +429,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         @SuppressWarnings("unused")
         @Option(name = "-hidden", hidden = true, usage = "Hidden option")
         public boolean hidden = false;
-        
+
         @Override
         public void setup() throws Exception {
             setupFlag = true;
@@ -488,11 +475,11 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         public void run() throws Exception {
             final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             for (String line = br.readLine(); line != null; line = br.readLine()) {
-                int count = lines.containsKey(currentInputFile) ? lines.get(currentInputFile) : 0;
+                final int count = lines.containsKey(currentInputFile) ? lines.get(currentInputFile) : 0;
                 lines.put(currentInputFile, count + 1);
             }
-            
-            for (String filename : inputFiles) {
+
+            for (final String filename : inputFiles) {
                 System.out.println(filename + " : " + lines.get(filename));
             }
         }

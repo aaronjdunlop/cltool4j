@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
  * {@link Enum} {@link ArgumentParser}.
  * 
  * @author Kohsuke Kawaguchi
+ * @author Aaron Dunlop
  */
 public class EnumParser<T extends Enum<T>> extends ArgumentParser<T> {
 
@@ -18,7 +19,7 @@ public class EnumParser<T extends Enum<T>> extends ArgumentParser<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public T parse(String arg) throws IllegalArgumentException {
+    public T parse(final String arg) throws IllegalArgumentException {
 
         try {
             if (Enum.valueOf(enumType, arg) != null) {

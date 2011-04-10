@@ -4,6 +4,63 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * {@link ArgumentParser} for {@link Calendar}s. Parses a number of standard (and not-so-standard) date and
+ * time formats, listed below in {@link SimpleDateFormat} syntax:<br/>
+ * <br/>
+ * 
+ * <b>Dot-separated</b>
+ * <ul>
+ * <li>yyyy.MM.dd.HH.mm.ss.SSS.ZZZ</li>
+ * <li>yyyy.MM.dd.HH.mm.ss.SSS</li>
+ * <li>yyyy.MM.dd.HH.mm.ss</li>
+ * <li>yyyy.MM.dd.HH.mm</li>
+ * <li>yyyy.MM.dd.HH.mm</li>
+ * </ul>
+ * 
+ * <b>Dot- and colon-separated, with time</b>
+ * <ul>
+ * <li>yyyy.MM.dd HH:mm:ss.SSS ZZZ</li>
+ * <li>yyyy.MM.dd HH:mm:ss.SSS</li>
+ * <li>yyyy.MM.dd HH:mm:ss</li>
+ * <li>yyyy.MM.dd HH:mm</li>
+ * <li>MM.dd.yyyy HH:mm:ss</li>
+ * <li>MM.dd.yy HH:mm:ss</li>
+ * <li>MM.dd HH:mm:ss</li>
+ * <li>MM.dd.yyyy HH:mm</li>
+ * <li>MM.dd.yy HH:mm</li>
+ * <li>MM.dd HH:mm</li>
+ * </ul>
+ * 
+ * <b>Dot-separated, without time</b>
+ * <ul>
+ * <li>yyyy.MM.dd</li>
+ * <li>MM.dd.yyyy</li>
+ * <li>MM.dd.yy</li>
+ * <li>MM.dd</li>
+ * </ul>
+ * 
+ * <b>Slash-separated, with time</b>
+ * <ul>
+ * <li>MM/dd/yyyy HH:mm:ss</li>
+ * <li>MM/dd/yy HH:mm:ss</li>
+ * <li>MM/dd HH:mm:ss</li>
+ * <li>MM/dd/yyyy HH:mm</li>
+ * <li>MM/dd/yy HH:mm</li>
+ * <li>MM/dd HH:mm</li>
+ * </ul>
+ * 
+ * <b>Slash-separated, without time</b>
+ * <ul>
+ * <li>yyyy/MM/dd</li>
+ * <li>MM/dd/yyyy</li>
+ * <li>MM/dd/yy</li>
+ * <li>MM/dd</li>
+ * </ul>
+ * 
+ * @author Aaron Dunlop
+ * 
+ */
 public class CalendarParser extends ArgumentParser<Calendar> {
 
     protected final static SimpleDateFormat COMMANDLINE_DATE_FORMATS[] = new SimpleDateFormat[] {
@@ -47,7 +104,7 @@ public class CalendarParser extends ArgumentParser<Calendar> {
         }
     }
 
-    public static Calendar parseDate(String arg) {
+    public static Calendar parseDate(final String arg) {
         final Calendar c = Calendar.getInstance();
         final int year = c.get(Calendar.YEAR);
 
@@ -67,7 +124,7 @@ public class CalendarParser extends ArgumentParser<Calendar> {
     }
 
     @Override
-    public Calendar parse(String arg) throws IllegalArgumentException {
+    public Calendar parse(final String arg) throws IllegalArgumentException {
         return parseDate(arg);
     }
 

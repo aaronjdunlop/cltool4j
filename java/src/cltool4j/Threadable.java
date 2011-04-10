@@ -11,11 +11,9 @@ import java.lang.annotation.Target;
  * 
  * @author Aaron Dunlop
  * @since Jan 10, 2009
- * 
- * @version $Revision$ $Date$ $Author$
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target( { ElementType.TYPE })
+@Target({ ElementType.TYPE })
 @Inherited
 public @interface Threadable {
 

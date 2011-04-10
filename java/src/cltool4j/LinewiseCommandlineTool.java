@@ -11,45 +11,38 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Processes input (from files or STDIN) line-by-line (possibly using multiple threads). Subclasses
- * must implement a {@link Callable} task to do the processing.
- *
+ * Processes input (from files or STDIN) line-by-line (possibly using multiple threads). Subclasses must
+ * implement a {@link Callable} task to do the processing.
+ * 
  * @author Aaron Dunlop
  * @since Nov 5, 2008
- *
- * @version $Revision$ $Date$ $Author$
+ * 
+ * @param <R> Type produced by processing of each input line
  */
 @Threadable
-public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool
-{
+public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
+
     // A simple marker denoting the end of input lines.
-    protected final FutureTask<R> END_OF_INPUT_MARKER = new FutureTask<R>(new Callable<R>()
-    {
+    protected final FutureTask<R> END_OF_INPUT_MARKER = new FutureTask<R>(new Callable<R>() {
         @Override
-        public R call() throws Exception
-        {
+        public R call() throws Exception {
             return null;
         }
     });
 
     @Override
-    public final void run() throws Exception
-    {
+    public final void run() throws Exception {
         final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        if (maxThreads == 1)
-        {
+        if (maxThreads == 1) {
             // Single-threaded version is simple...
-            for (String line = br.readLine(); line != null; line = br.readLine())
-            {
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
                 final FutureTask<R> lineTask = lineTask(line);
                 lineTask.run();
                 output(lineTask.get());
             }
             br.close();
-        }
-        else
-        {
+        } else {
             // For the multi-threaded version, we need to create a separate thread which will
             // collect the output and spit it out in-order
             final BlockingQueue<FutureTask<R>> outputQueue = new LinkedBlockingQueue<FutureTask<R>>();
@@ -58,8 +51,7 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool
 
             final ExecutorService executor = Executors.newFixedThreadPool(maxThreads);
 
-            for (String line = br.readLine(); line != null; line = br.readLine())
-            {
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
                 final FutureTask<R> futureTask = lineTask(line);
                 outputQueue.add(futureTask);
                 executor.execute(futureTask);
@@ -82,45 +74,36 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool
 
     /**
      * Outputs the result to STDOUT
+     * 
      * @param result
      */
-    protected void output(R result) {
-        String s = result.toString();
-        if (s.length() > 0)
-        {
+    protected void output(final R result) {
+        final String s = result.toString();
+        if (s.length() > 0) {
             System.out.println(s);
             System.out.flush();
         }
     }
-    
-    private class OutputThread extends Thread
-    {
+
+    private class OutputThread extends Thread {
 
         private final BlockingQueue<FutureTask<R>> queue;
 
-        public OutputThread(final BlockingQueue<FutureTask<R>> queue)
-        {
+        public OutputThread(final BlockingQueue<FutureTask<R>> queue) {
             this.queue = queue;
         }
 
         @Override
-        public void run()
-        {
-            while (true)
-            {
-                try
-                {
+        public void run() {
+            while (true) {
+                try {
                     final FutureTask<R> task = queue.take();
-                    if (task == END_OF_INPUT_MARKER)
-                    {
+                    if (task == END_OF_INPUT_MARKER) {
                         return;
                     }
                     output(task.get());
-                }
-                catch (final InterruptedException ignore)
-                {}
-                catch (final ExecutionException e)
-                {
+                } catch (final InterruptedException ignore) {
+                } catch (final ExecutionException e) {
                     e.printStackTrace();
                     return;
                 }
