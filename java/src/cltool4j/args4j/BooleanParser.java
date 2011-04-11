@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Boolean {@link ArgumentParser}.
+ * {@link ArgumentParser} for Boolean types. Handles true/false, t/f, on/off, yes/no, 1/0. All comparisons are
+ * insensitive to case.
  * 
  * @author Kohsuke Kawaguchi
  */
@@ -37,10 +38,10 @@ public class BooleanParser extends ArgumentParser<Boolean> {
     @Override
     public Boolean parse(final String arg) throws IllegalArgumentException {
 
-        if (!ACCEPTABLE_VALUES.containsKey(arg)) {
+        if (!ACCEPTABLE_VALUES.containsKey(arg.toLowerCase())) {
             throw new IllegalArgumentException();
         }
-        return ACCEPTABLE_VALUES.get(arg);
+        return ACCEPTABLE_VALUES.get(arg.toLowerCase());
     }
 
     @Override

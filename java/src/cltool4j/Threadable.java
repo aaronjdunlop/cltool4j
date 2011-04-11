@@ -21,7 +21,7 @@ public @interface Threadable {
      * The number of threads started by default. If unspecified, the thread count will default to the number
      * of CPUs on the machine. This option is generally used to limit the default to a lower number.
      * 
-     * The thread count can be overridden on the commandline with the -xt option.
+     * The default thread count can be overridden on the command-line with the -xt option.
      * 
      * @return The number of threads to start by default for this class.
      */

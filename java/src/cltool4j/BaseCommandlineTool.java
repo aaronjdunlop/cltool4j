@@ -24,8 +24,6 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 import cltool4j.args4j.Argument;
-import cltool4j.args4j.ArgumentParser;
-import cltool4j.args4j.CalendarParser;
 import cltool4j.args4j.CmdLineException;
 import cltool4j.args4j.CmdLineParser;
 import cltool4j.args4j.EnumAliasMap;
@@ -458,23 +456,9 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * Parses a date into a long (seconds since the epoch)
-     * 
-     * TODO Move into cltool4j.args4j package
+     * Enumeration of all log levels supported by the <code>java.util.logging</code> system, with aliases
+     * mapping integer values relative to a default log level of {@link Level#INFO}.
      */
-    public static class TimestampParser extends ArgumentParser<Long> {
-
-        @Override
-        public Long parse(final String s) {
-            return CalendarParser.parseDate(s.toLowerCase()).getTime().getTime();
-        }
-
-        @Override
-        public String defaultMetaVar() {
-            return "date";
-        }
-    }
-
     public static enum LogLevel {
         all("+5", "5"), finest("+4", "4"), finer("+3", "3"), fine("+2", "2", "debug"), config("+1", "1"), info(
                 "0"), warning("-1"), severe("-2"), off("-3");
