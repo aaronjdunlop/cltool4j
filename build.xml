@@ -9,14 +9,23 @@
     </target>
 
     <target name="compile" description="Compile">
-        <delete dir="build" failonerror="false"/>
+        <delete dir="build" failonerror="false" />
         <mkdir dir="build" />
-        <javac srcdir="java/src" destdir="build" classpath="java/lib/junit.jar:java/lib/log4j.jar" debug="true" includeantruntime="false" />
+        <javac srcdir="java/src" destdir="build" classpath="java/lib/junit.jar:java/lib/jvmstat.jar" debug="true" includeantruntime="false" />
     </target>
 
-	<target name="dist" depends="compile" description="Build release jar">
-        <jar basedir="build" file="build/cltool4j.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" /> 
-        <jar basedir="java/src" file="build/cltool4j-src.jar" includes="**/*.java" /> 
+    <target name="dist" depends="compile" description="Build release jar">
+        <!-- Package a version with sun classes -->
+        <jar file="build/cltool4j.jar">
+            <fileset dir="build" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" />
+            <zipfileset src="java/lib/jvmstat.jar" />
+        </jar>
+
+        <!-- And a version without sun classes -->
+        <jar basedir="build" file="build/cltool4j-nosun.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" />
+
+        <!-- And a source jar -->
+        <jar basedir="java/src" file="build/cltool4j-src.jar" includes="**/*.java" />
     </target>
-    
+
 </project>

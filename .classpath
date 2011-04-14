@@ -3,5 +3,6 @@
 	<classpathentry kind="src" path="java/src"/>
 	<classpathentry exported="true" kind="lib" path="java/lib/junit.jar" sourcepath="java/lib/junit-src.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="java/lib/jvmstat.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.SequenceInputStream;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,6 +17,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -122,17 +124,120 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * Parses command-line arguments and executes the tool. This method should be called from within the
-     * main() methods of all subclasses.
+     * Attempts to determine the actual subclass which was called on the command-line, implements an instance
+     * of that class, and calls {@link #runInternal(String[])}. <br/>
+     * <br/>
+     * 
+     * The standard Java libraries do not provide access to the requested main class, so the approaches
+     * implemented here are workarounds that depend on Sun / Oracle JVM details. We recommend that subclass
+     * authors override this method and call {@link #run(String[])}, but we cannot statically enforce that
+     * they override a static method, so we attempt to compensate if they do not implement
+     * {@link #main(String[])}. <br/>
+     * <br/>
+     * 
+     * We first attempt to use sun.jvmstat.monitor and sun.jvmstat.perfdata classes to connect to the local VM
+     * and obtain the command-line. <br/>
+     * <br/>
+     * 
+     * Failing that, we execute 'jps' and parse its output. <br/>
+     * <br/>
+     * 
+     * If both methods fail, we give up and warn the user to implement {@link #main(String[])}. <br/>
+     * <br/>
+     * 
+     * Note: both of these methods are trouble-prone, but we do not know which is more-so, nor which is more
+     * computationally expensive. i.e., is it more expensive to connect to a running VM or to fork a new
+     * process? Perhaps the order of the search should be reversed?
      * 
      * @param args
      */
-    @SuppressWarnings("unchecked")
+    public static void main(final String[] args) {
+
+        String mainClass = null;
+        try {
+            final String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+
+            try {
+                // First, attempt to use sun.jvmstat (instantiated using reflection in case we don't have the
+                // sun.jvmstat classes in classpath)
+                final Object vmId = Class.forName("sun.jvmstat.monitor.VmIdentifier")
+                        .getConstructor(String.class).newInstance(pid);
+                final Object lmVm = Class
+                        .forName("sun.jvmstat.perfdata.monitor.protocol.local.LocalMonitoredVm")
+                        .getConstructor(vmId.getClass(), int.class).newInstance(vmId, 1000);
+
+                final Class<?> monitoredVmUtilClass = Class.forName("sun.jvmstat.monitor.MonitoredVmUtil");
+                mainClass = (String) monitoredVmUtilClass.getMethod("mainClass",
+                        Class.forName("sun.jvmstat.monitor.MonitoredVm"), boolean.class).invoke(
+                        monitoredVmUtilClass, lmVm, true);
+                lmVm.getClass().getMethod("detach", new Class[] {}).invoke(lmVm, new Object[] {});
+
+            } catch (final Throwable t1) {
+
+                // If sun.jvmstat failed for any reason (including lack of sun.jvmstat tools in classpath),
+                // attempt to execute jps, parse the output, and look for our own PID
+                final Process jps = Runtime.getRuntime().exec(new String[] { "jps", "-l" });
+                final BufferedReader br = new BufferedReader(new InputStreamReader(jps.getInputStream()));
+                for (String line = br.readLine(); line != null; line = br.readLine()) {
+                    final String[] split = line.split(" ");
+                    if (pid.equals(split[0])) {
+                        mainClass = split[1];
+                        break;
+                    }
+                }
+            }
+
+            if (mainClass == null) {
+                // Fail using the catch clause below
+                throw new RuntimeException("");
+            }
+
+            // If the main class was invoked using java -jar, read the 'Main-Class' attribute from the jar
+            // manifest
+            if (mainClass.endsWith(".jar")) {
+                final JarFile j = new JarFile(mainClass);
+                mainClass = j.getManifest().getMainAttributes().getValue("Main-Class");
+            }
+
+        } catch (final Throwable t2) {
+            System.err.println("Unable to determine main-class.");
+            System.err.println("  Tool classes should implement main(String[]) and call run(String[]).");
+            System.exit(-1);
+        }
+
+        try {
+            @SuppressWarnings("unchecked")
+            final Class<? extends BaseCommandlineTool> c = (Class<? extends BaseCommandlineTool>) Class
+                    .forName(mainClass);
+            run(c, args);
+        } catch (final Exception e) {
+            System.err.println("Unable to instantiate target class: " + e.getMessage());
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * Parses command-line arguments and executes the tool. This method should be called from within the
+     * {@link #main(String[])} methods of all subclasses.
+     * 
+     * Infers the subclass which was invoked on the command-line by looking back one level on the stack.
+     * 
+     * @param args
+     */
     public final static void run(final String[] args) {
         try {
+            @SuppressWarnings("unchecked")
             final Class<? extends BaseCommandlineTool> c = (Class<? extends BaseCommandlineTool>) Class
                     .forName(Thread.currentThread().getStackTrace()[2].getClassName());
+            run(c, args);
+        } catch (final Exception e) {
+            System.err.println("Unable to instantiate target class: " + e.getMessage());
+            System.exit(-1);
+        }
+    }
 
+    private static void run(final Class<? extends BaseCommandlineTool> c, final String[] args) {
+        try {
             // For Scala objects
             try {
                 final BaseCommandlineTool tool = (BaseCommandlineTool) c.getField("MODULE$").get(null);
@@ -144,7 +249,8 @@ public abstract class BaseCommandlineTool {
                 tool.runInternal(args);
             }
         } catch (final Exception e) {
-            e.printStackTrace();
+            System.err.println("Unable to instantiate target class: " + e.getMessage());
+            System.exit(-1);
         }
     }
 
@@ -195,7 +301,16 @@ public abstract class BaseCommandlineTool {
 
             // Configure GlobalProperties from property files or command-line options (-O)
 
-            // First, iterate through any property files specified, 'merging' the file contents together (in
+            // First, read 'META-INF/defaults.properties' if present in the jar
+            final InputStream defaultPropIs = getClass().getClassLoader().getResourceAsStream(
+                    "META-INF/defaults.properties");
+            if (defaultPropIs != null) {
+                final Properties p = new Properties();
+                p.load(defaultPropIs);
+                GlobalConfigProperties.singleton().mergeUnder(p);
+            }
+
+            // Iterate through any property files specified, 'merging' the file contents together (in
             // case of a duplicate key, the last one found wins)
             for (final String o : options) {
                 final String[] keyValue = o.split("=");
