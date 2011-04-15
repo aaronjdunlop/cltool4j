@@ -35,15 +35,20 @@ import cltool4j.args4j.Option;
  * Base class for any tools which should be executable from the command-line. This class implements the
  * majority of the functionality needed to execute java code as a 'standard' command-line tool, including
  * parsing command-line options and reading input from either STDIN or from multiple files specified on the
- * command-line.
+ * command-line.<br/>
+ * <br/>
  * 
- * Unfortunately, it doesn't appear possible to determine the actual class being executed within
- * <code>main(String[])</code>, so each subclass must implement a <code>main(String[])</code> method and call
- * {@link BaseCommandlineTool#run(String[])} from within it.
+ * The standard Java libraries do not provide access to the requested main class (e.g. the class specified on
+ * the command-line or with the <code>Main-Class</code> attribute of a jar manifest. We recommend that
+ * subclasses should implement <code>main(String[])</code> and call {@link BaseCommandlineTool#run(String[])}
+ * from within it. However, we cannot enforce this requirement statically, since Java has no concept of an
+ * <code>abstract static</code> method. So we attempt to compensate if the subclass does not implement
+ * <code>main(String[])</code>. The workarounds in {@link BaseCommandlineTool#main(String[])} depend on Sun /
+ * Oracle JVM details. <br/>
+ * <br/>
  * 
- * In addition, subclasses should include a no-argument constructor and the abstract methods declared here in
+ * In addition, subclasses must include a no-argument constructor and the abstract methods declared here in
  * the superclass.
- * 
  * 
  * @author Aaron Dunlop
  * @since Aug 14, 2008
