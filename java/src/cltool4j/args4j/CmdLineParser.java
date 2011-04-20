@@ -27,7 +27,7 @@ import java.util.Set;
 public class CmdLineParser {
 
     /** Known {@link ArgumentParser}s, mapped by class name. */
-    private final Map<String, ArgumentParser<?>> argumentParsers = new HashMap<String, ArgumentParser<?>>();
+    private final Map<Class<?>, ArgumentParser<?>> argumentParsers = new HashMap<Class<?>, ArgumentParser<?>>();
 
     /** Discovered {@link Setter}s for options. */
     private final ArrayList<Setter<?>> optionSetters = new ArrayList<Setter<?>>();
@@ -302,7 +302,7 @@ public class CmdLineParser {
      */
     public void registerParser(final ArgumentParser<?> parser, final Class<?>... argumentClasses) {
         for (final Class<?> argumentClass : argumentClasses) {
-            argumentParsers.put(argumentClass.getName(), parser);
+            argumentParsers.put(argumentClass, parser);
         }
     }
 
@@ -314,10 +314,10 @@ public class CmdLineParser {
             return new EnumParser(this, argumentClass);
         }
 
-        if (!argumentParsers.containsKey(argumentClass.getName())) {
+        if (!argumentParsers.containsKey(argumentClass)) {
             throw new IllegalAnnotationError("No parser registered for type " + argumentClass.getName());
         }
-        return (ArgumentParser<T>) argumentParsers.get(argumentClass.getName());
+        return (ArgumentParser<T>) argumentParsers.get(argumentClass);
     }
 
     public void setUsageWidth(final int usageWidth) {

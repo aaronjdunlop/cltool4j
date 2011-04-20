@@ -9,6 +9,7 @@ import java.util.Set;
 
 /**
  * Analyzes {@link Option} and {@link Argument} annotations in the class hierarchy. Called from
+ * {@link CmdLineParser}.
  * 
  * @author Jan Materne
  */
