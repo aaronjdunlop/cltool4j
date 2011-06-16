@@ -156,6 +156,7 @@ public abstract class BaseCommandlineTool {
      * 
      * @param args
      */
+    @SuppressWarnings("unchecked")
     public static void main(final String[] args) {
 
         String mainClass = null;
@@ -210,15 +211,14 @@ public abstract class BaseCommandlineTool {
             System.exit(-1);
         }
 
+        Class<? extends BaseCommandlineTool> c = null;
         try {
-            @SuppressWarnings("unchecked")
-            final Class<? extends BaseCommandlineTool> c = (Class<? extends BaseCommandlineTool>) Class
-                    .forName(mainClass);
-            run(c, args);
-        } catch (final Exception e) {
-            System.err.println("Unable to instantiate target class: " + e.getMessage());
+            c = (Class<? extends BaseCommandlineTool>) Class.forName(mainClass);
+        } catch (final ClassNotFoundException e) {
+            System.err.println("Unable to load target class: " + mainClass);
             System.exit(-1);
         }
+        run(c, args);
     }
 
     /**
@@ -229,33 +229,41 @@ public abstract class BaseCommandlineTool {
      * 
      * @param args
      */
+    @SuppressWarnings("unchecked")
     public final static void run(final String[] args) {
+
+        final String mainClass = Thread.currentThread().getStackTrace()[2].getClassName();
+        Class<? extends BaseCommandlineTool> c = null;
+
         try {
-            @SuppressWarnings("unchecked")
-            final Class<? extends BaseCommandlineTool> c = (Class<? extends BaseCommandlineTool>) Class
-                    .forName(Thread.currentThread().getStackTrace()[2].getClassName());
-            run(c, args);
-        } catch (final Exception e) {
-            System.err.println("Unable to instantiate target class: " + e.getMessage());
+            c = (Class<? extends BaseCommandlineTool>) Class.forName(mainClass);
+        } catch (final ClassNotFoundException e) {
+            System.err.println("Unable to load target class: " + mainClass);
             System.exit(-1);
         }
+        run(c, args);
     }
 
+    @SuppressWarnings("null")
     private static void run(final Class<? extends BaseCommandlineTool> c, final String[] args) {
+        BaseCommandlineTool tool = null;
         try {
             // For Scala objects
             try {
-                final BaseCommandlineTool tool = (BaseCommandlineTool) c.getField("MODULE$").get(null);
-                tool.runInternal(args);
+                tool = (BaseCommandlineTool) c.getField("MODULE$").get(null);
             } catch (final Exception e) {
                 // For Java
-                final BaseCommandlineTool tool = c.getConstructor(new Class[] {})
-                        .newInstance(new Object[] {});
-                tool.runInternal(args);
+                tool = c.getConstructor(new Class[] {}).newInstance(new Object[] {});
             }
         } catch (final Exception e) {
             System.err.println("Unable to instantiate target class: " + e.getMessage());
             System.exit(-1);
+        }
+
+        try {
+            tool.runInternal(args);
+        } catch (final Exception e) {
+            e.printStackTrace();
         }
     }
 

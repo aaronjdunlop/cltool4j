@@ -45,7 +45,11 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
         } else {
             // For the multi-threaded version, we need to create a separate thread which will
             // collect the output and spit it out in-order
-            final BlockingQueue<FutureTask<R>> outputQueue = new LinkedBlockingQueue<FutureTask<R>>();
+
+            // Allocate a queue large enough to contain several pending tasks for each thread, but small
+            // enough to avoid attempting to schedule all future jobs at once.
+            final BlockingQueue<FutureTask<R>> outputQueue = new LinkedBlockingQueue<FutureTask<R>>(
+                    maxThreads * 4);
             final OutputThread outputThread = new OutputThread(outputQueue);
             outputThread.start();
 
@@ -53,7 +57,7 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
 
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 final FutureTask<R> futureTask = lineTask(line);
-                outputQueue.add(futureTask);
+                outputQueue.put(futureTask);
                 executor.execute(futureTask);
             }
             br.close();
