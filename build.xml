@@ -3,7 +3,7 @@
 <project name="cltool" default="dist" basedir=".">
 
     <target name="javadoc" description="Package JavaDoc">
-        <javadoc destdir="build-doc" classpath="java/lib/junit.jar:java/lib/log4j.jar">
+        <javadoc destdir="build-doc/javadoc" classpath="java/lib/junit.jar:java/lib/log4j.jar">
             <fileset dir="java/src" includes="**/*.java" excludes="**/Test*.java,**/Profile*.java,**/All*Tests.java,**/*TestCase.java" />
         </javadoc>
     </target>
