@@ -152,7 +152,7 @@ public class CmdLineParser {
         final Set<Setter<?>> observedSetters = new HashSet<Setter<?>>();
         int argIndex = 0;
 
-        final Set<String> observedChoiceGroups = new HashSet<String>();
+        final Map<String, String> observedChoiceGroups = new HashMap<String, String>();
 
         while (parameters.hasNext()) {
             Setter<T> setter;
@@ -173,11 +173,13 @@ public class CmdLineParser {
                 }
 
                 if (setter.option.choiceGroup().length() > 0) {
-                    if (observedChoiceGroups.contains(setter.option.choiceGroup())) {
+                    if (observedChoiceGroups.containsKey(setter.option.choiceGroup())
+                            && !observedChoiceGroups.get(setter.option.choiceGroup()).equals(
+                                    setter.option.name())) {
                         throw new CmdLineException("Only one of "
                                 + choiceGroupSummary(setter.option.choiceGroup()) + " is allowed");
                     }
-                    observedChoiceGroups.add(setter.option.choiceGroup());
+                    observedChoiceGroups.put(setter.option.choiceGroup(), setter.option.name());
                 }
 
                 try {
@@ -231,7 +233,7 @@ public class CmdLineParser {
             // make sure that one of each choice group is present
             for (final Setter<?> setter : optionSetters) {
                 if (setter.option.choiceGroup().length() > 0
-                        && !observedChoiceGroups.contains(setter.option.choiceGroup())) {
+                        && !observedChoiceGroups.containsKey(setter.option.choiceGroup())) {
                     throw new CmdLineException("One of " + choiceGroupSummary(setter.option.choiceGroup())
                             + " is required");
                 }

@@ -209,7 +209,8 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
         sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
         sb.append("                     severe,-2; off,-3)   Default = info\n");
-        sb.append(" -xt threads       : Maximum threads;   Default = 2\n");
+        sb.append(" -xt threads       : Maximum threads;   Default = "
+                + Runtime.getRuntime().availableProcessors() + "\n");
         sb.append(" -option value     : o\n");
 
         WithRequiredArguments tool = new WithRequiredArguments();
@@ -227,7 +228,8 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
         sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
         sb.append("                     severe,-2; off,-3)   Default = info\n");
-        sb.append(" -xt threads       : Maximum threads;   Default = 2\n");
+        sb.append(" -xt threads       : Maximum threads;   Default = "
+                + Runtime.getRuntime().availableProcessors() + "\n");
         sb.append(" -option value     : o\n");
 
         tool = new WithRequiredArguments();
@@ -315,19 +317,21 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         executeTool(tool, "-o1 1 -o3 3", "");
         executeTool(tool, "-o2 2 -o3 3", "");
 
+        // Test a multi-valued option in a choice group
+        executeTool(tool, "-o2 2 -o6 3 -o6 4", "");
+
         String output = executeTool(tool, "-o3 3", "");
-        assertTrue(output.startsWith(""));
         assertTrue(output.startsWith("One of <-o1> or <-o2> is required"));
 
         output = executeTool(tool, "-o1 1 -o2 1", "");
         assertTrue(output.startsWith("Only one of <-o1> or <-o2> is allowed"));
 
         output = executeTool(tool, "-o1 1", "");
-        assertTrue(output.startsWith(""));
-        assertTrue(output.startsWith("One of <-o3>, <-o4>, or <-o5> is required"));
+        assertTrue(output.startsWith("One of <-o3>, <-o4>, <-o5>, or <-o6> is required"));
 
         output = executeTool(tool, "-o1 1 -o3 3 -o4 4", "");
-        assertTrue(output.startsWith("Only one of <-o3>, <-o4>, or <-o5> is allowed"));
+        assertTrue(output.startsWith("Only one of <-o3>, <-o4>, <-o5>, or <-o6> is allowed"));
+
     }
 
     @Test
@@ -573,6 +577,9 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
         @Option(name = "-o5", usage = "o", choiceGroup = "B", metaVar = "value")
         private String o5;
+
+        @Option(name = "-o6", usage = "o", choiceGroup = "B", metaVar = "value")
+        private String[] o6;
 
         @Override
         protected void run() throws Exception {

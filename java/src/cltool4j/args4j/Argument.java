@@ -42,6 +42,8 @@ public @interface Argument {
      * <br/>
      * 
      * If a multi-valued property is annotated with {@link Argument}, its index must be the highest.
+     * 
+     * @return Position of the argument
      */
     int index() default 0;
 
