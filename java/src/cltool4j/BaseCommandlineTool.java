@@ -87,8 +87,6 @@ public abstract class BaseCommandlineTool {
     @Argument(multiValued = true, metaVar = "files")
     protected String[] inputFiles = new String[0];
 
-    protected Exception exception;
-
     protected String currentInputFile;
 
     /**
@@ -156,8 +154,7 @@ public abstract class BaseCommandlineTool {
      * 
      * @param args
      */
-    @SuppressWarnings("unchecked")
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
 
         String mainClass = null;
         try {
@@ -211,14 +208,15 @@ public abstract class BaseCommandlineTool {
             System.exit(-1);
         }
 
-        Class<? extends BaseCommandlineTool> c = null;
         try {
-            c = (Class<? extends BaseCommandlineTool>) Class.forName(mainClass);
+            @SuppressWarnings("unchecked")
+            final Class<? extends BaseCommandlineTool> c = (Class<? extends BaseCommandlineTool>) Class
+                    .forName(mainClass);
+            run(c, args);
         } catch (final ClassNotFoundException e) {
-            System.err.println("Unable to load target class: " + mainClass);
+            System.err.println("Unable to instantiate target class: " + e.getMessage());
             System.exit(-1);
         }
-        run(c, args);
     }
 
     /**
@@ -229,37 +227,35 @@ public abstract class BaseCommandlineTool {
      * 
      * @param args
      */
-    @SuppressWarnings("unchecked")
     public final static void run(final String[] args) {
-
-        final String mainClass = Thread.currentThread().getStackTrace()[2].getClassName();
-        Class<? extends BaseCommandlineTool> c = null;
-
         try {
-            c = (Class<? extends BaseCommandlineTool>) Class.forName(mainClass);
-        } catch (final ClassNotFoundException e) {
-            System.err.println("Unable to load target class: " + mainClass);
-            System.exit(-1);
-        }
-        run(c, args);
-    }
-
-    @SuppressWarnings("null")
-    private static void run(final Class<? extends BaseCommandlineTool> c, final String[] args) {
-        BaseCommandlineTool tool = null;
-        try {
-            // For Scala objects
-            try {
-                tool = (BaseCommandlineTool) c.getField("MODULE$").get(null);
-            } catch (final Exception e) {
-                // For Java
-                tool = c.getConstructor(new Class[] {}).newInstance(new Object[] {});
-            }
+            @SuppressWarnings("unchecked")
+            final Class<? extends BaseCommandlineTool> c = (Class<? extends BaseCommandlineTool>) Class
+                    .forName(Thread.currentThread().getStackTrace()[2].getClassName());
+            run(c, args);
         } catch (final Exception e) {
             System.err.println("Unable to instantiate target class: " + e.getMessage());
             System.exit(-1);
         }
+    }
 
+    @SuppressWarnings("null")
+    private static void run(final Class<? extends BaseCommandlineTool> c, final String[] args)
+            throws Exception {
+        BaseCommandlineTool tool = null;
+        // For Scala objects
+        try {
+            tool = (BaseCommandlineTool) c.getField("MODULE$").get(null);
+        } catch (final Exception e) {
+            // For Java
+            try {
+                tool = c.getConstructor(new Class[] {}).newInstance(new Object[] {});
+            } catch (final Exception e2) {
+                System.err.println("Unable to instantiate target class: " + e2.getMessage());
+                System.exit(-1);
+            }
+        }
+        
         try {
             tool.runInternal(args);
         } catch (final Exception e) {
@@ -370,34 +366,35 @@ public abstract class BaseCommandlineTool {
             return;
         }
 
-        // Handle arguments
-        if (inputFiles.length > 0 && inputFiles[0].length() > 0) {
-            // Handle one or more input files from the command-line, translating gzipped
-            // files as appropriate. Re-route multiple files into a single InputStream so we can execute the
-            // tool a single time.
-            // Open all files prior to processing, so we can fail early if one or more files cannot be opened
-            final LinkedList<InputStream> inputList = new LinkedList<InputStream>();
-            for (final String filename : inputFiles) {
-                inputList.add(fileAsInputStream(filename));
+        try {
+            // Handle arguments
+            if (inputFiles.length > 0 && inputFiles[0].length() > 0) {
+                // Handle one or more input files from the command-line, translating gzipped
+                // files as appropriate. Re-route multiple files into a single InputStream so we can execute
+                // the
+                // tool a single time.
+                // Open all files prior to processing, so we can fail early if one or more files cannot be
+                // opened
+                final LinkedList<InputStream> inputList = new LinkedList<InputStream>();
+                for (final String filename : inputFiles) {
+                    inputList.add(fileAsInputStream(filename));
+                }
+
+                final InputStream is = new MultiInputStream(inputList);
+                System.setIn(is);
+                run();
+                is.close();
+
+            } else {
+                // Handle input on STDIN
+                run();
             }
+        } finally {
 
-            final InputStream is = new MultiInputStream(inputList);
-            System.setIn(is);
-            run();
-            is.close();
-
-        } else {
-            // Handle input on STDIN
-            run();
+            cleanup();
+            System.out.flush();
+            System.out.close();
         }
-
-        if (exception != null) {
-            throw exception;
-        }
-
-        cleanup();
-        System.out.flush();
-        System.out.close();
     }
 
     private void printUsage(final CmdLineParser parser, final boolean includeHiddenOptions) {
@@ -456,11 +453,26 @@ public abstract class BaseCommandlineTool {
     /**
      * Convenience method; returns STDIN as a {@link BufferedReader}.
      * 
-     * @return BufferedReader
+     * @return STDIN
      * @throws IOException
      */
     protected BufferedReader inputAsBufferedReader() throws IOException {
         return new BufferedReader(new InputStreamReader(System.in));
+    }
+
+    /**
+     * Convenience method; returns STDIN as a {@link String}.
+     * 
+     * @return STDIN
+     * @throws IOException
+     */
+    protected String inputAsString() throws IOException {
+        final StringBuilder sb = new StringBuilder();
+        for (final String s : inputLines()) {
+            sb.append(s);
+            sb.append('\n');
+        }
+        return sb.toString();
     }
 
     /**
