@@ -255,7 +255,7 @@ public abstract class BaseCommandlineTool {
                 System.exit(-1);
             }
         }
-        
+
         try {
             tool.runInternal(args);
         } catch (final Exception e) {
@@ -413,9 +413,18 @@ public abstract class BaseCommandlineTool {
      * @throws IOException
      */
     protected Iterable<String> inputLines() throws IOException {
+        return inputLines(System.in);
+    }
+
+    /**
+     * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
+     * 
+     * @throws IOException if the {@link InputStream} cannot be read
+     */
+    public Iterable<String> inputLines(final InputStream is) throws IOException {
         try {
             return new Iterable<String>() {
-                final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+                final BufferedReader br = new BufferedReader(new InputStreamReader(is));
                 String line = br.readLine();
 
                 @Override
@@ -545,6 +554,30 @@ public abstract class BaseCommandlineTool {
             sb.append((char) c);
         }
         return sb.toString();
+    }
+
+    /**
+     * Convenience method; returns an iterator over the lines in the specified file, uncompressing GZIP'd
+     * files as appropriate.
+     * 
+     * @param f
+     * @return InputStream
+     * @throws IOException
+     */
+    protected Iterable<String> fileLines(final File f) throws IOException {
+        return inputLines(fileAsInputStream(f));
+    }
+
+    /**
+     * Convenience method; returns an iterator over the lines in the specified file, uncompressing GZIP'd
+     * files as appropriate.
+     * 
+     * @param filename
+     * @return InputStream
+     * @throws IOException
+     */
+    protected Iterable<String> fileLines(final String filename) throws IOException {
+        return inputLines(fileAsInputStream(filename));
     }
 
     /**
