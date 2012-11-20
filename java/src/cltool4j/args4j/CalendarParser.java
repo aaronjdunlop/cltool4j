@@ -64,6 +64,20 @@ import java.util.Date;
 public class CalendarParser extends ArgumentParser<Calendar> {
 
     protected final static SimpleDateFormat COMMANDLINE_DATE_FORMATS[] = new SimpleDateFormat[] {
+            // Dash-separated, without time
+            new SimpleDateFormat("yyyy-MM-dd"),
+            new SimpleDateFormat("MM-dd-yyyy"),
+            new SimpleDateFormat("MM-dd-yy"),
+            new SimpleDateFormat("MM-dd"),
+
+            // Dash-separated, with time
+            new SimpleDateFormat("MM-dd-yyyy HH:mm:ss"),
+            new SimpleDateFormat("MM-dd-yy HH:mm:ss"),
+            new SimpleDateFormat("MM-dd HH:mm:ss"),
+            new SimpleDateFormat("MM-dd-yyyy HH:mm"),
+            new SimpleDateFormat("MM-dd-yy HH:mm"),
+            new SimpleDateFormat("MM-dd HH:mm"),
+
             // Dot-separated, with time
             new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS.ZZZ"),
             new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS"),

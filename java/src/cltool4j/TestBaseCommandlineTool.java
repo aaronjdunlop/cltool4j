@@ -331,7 +331,45 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
         output = executeTool(tool, "-o1 1 -o3 3 -o4 4", "");
         assertTrue(output.startsWith("Only one of <-o3>, <-o4>, <-o5>, or <-o6> is allowed"));
+    }
 
+    /**
+     * Verifies that only one option from an optional 'choice group' is allowed
+     */
+    @Test
+    public void testOptionalChoiceGroup() throws Exception {
+        final WithOptionalChoiceGroups tool = new WithOptionalChoiceGroups();
+
+        // We should be able to run without either option
+        executeTool(tool, "", "");
+        // Or with either one
+        executeTool(tool, "-o1 1", "");
+        executeTool(tool, "-o2 2", "");
+
+        // But not with both
+        final String output = executeTool(tool, "-o1 1 -o2 2", "");
+        assertTrue(output.startsWith("Only one of <-o1> or <-o2> is allowed"));
+    }
+
+    /**
+     * Tests the {@link Option#requires()} parameter.
+     */
+    @Test
+    public void testRequires() throws Exception {
+        final WithRequires tool = new WithRequires();
+
+        // We should be able to run without either option
+        executeTool(tool, "", "");
+        // Or with both
+        executeTool(tool, "-o1 1 -o2 2", "");
+
+        // But -o1 depends on -o2
+        String output = executeTool(tool, "-o1 1", "");
+        assertTrue(output.startsWith("Option <-o2> is required for <-o1>"));
+
+        // And -o2 depends on -o1
+        output = executeTool(tool, "-o2 2", "");
+        assertTrue(output.startsWith("Option <-o1> is required for <-o2>"));
     }
 
     @Test
@@ -580,6 +618,32 @@ public class TestBaseCommandlineTool extends ToolTestCase {
 
         @Option(name = "-o6", usage = "o", choiceGroup = "B", metaVar = "value")
         private String[] o6;
+
+        @Override
+        protected void run() throws Exception {
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private static class WithOptionalChoiceGroups extends BaseCommandlineTool {
+        @Option(name = "-o1", usage = "o", optionalChoiceGroup = "A", metaVar = "value")
+        private String o1;
+
+        @Option(name = "-o2", usage = "o", optionalChoiceGroup = "A", metaVar = "value")
+        private String o2;
+
+        @Override
+        protected void run() throws Exception {
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private static class WithRequires extends BaseCommandlineTool {
+        @Option(name = "-o1", usage = "o", requires = "-o2", metaVar = "value")
+        private String o1;
+
+        @Option(name = "-o2", usage = "o", requires = "-o1", metaVar = "value")
+        private String o2;
 
         @Override
         protected void run() throws Exception {

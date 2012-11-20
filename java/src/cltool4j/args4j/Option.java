@@ -142,7 +142,21 @@ public @interface Option {
      * Defines a 'group' of options, one of which is required. If specified, the user must provide one (and
      * only one) of the options specifying the same group.
      * 
-     * @return A 'group' of options, one of which is required.
+     * @return A 'group' of mutually exclusive options, one of which is required.
      */
     String choiceGroup() default "";
+
+    /**
+     * Defines a 'group' of options which are mutually exclusive. Similar to {@link #choiceGroup}, in that
+     * only one of the options in a group is permitted, but this choice is optional (the user has the option
+     * of omitting all group members).
+     * 
+     * @return A 'group' of mutually exclusive options.
+     */
+    String optionalChoiceGroup() default "";
+
+    /**
+     * @return The name of another {@link Option} which is required in conjunction with this {@link Option}.
+     */
+    String requires() default "";
 }

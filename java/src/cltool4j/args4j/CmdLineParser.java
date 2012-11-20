@@ -35,6 +35,7 @@ public class CmdLineParser {
     private final Map<String, Setter<?>> optionSettersByName = new HashMap<String, Setter<?>>();
 
     private final Map<String, LinkedList<Setter<?>>> optionSettersByChoiceGroup = new HashMap<String, LinkedList<Setter<?>>>();
+    private final Map<String, LinkedList<Setter<?>>> optionSettersByOptionalChoiceGroup = new HashMap<String, LinkedList<Setter<?>>>();
 
     /** Discovered {@link Setter}s for arguments. */
     private final List<Setter<?>> argumentSetters = new ArrayList<Setter<?>>();
@@ -132,6 +133,15 @@ public class CmdLineParser {
             }
             list.add(setter);
         }
+
+        if (o.optionalChoiceGroup().length() > 0) {
+            LinkedList<Setter<?>> list = optionSettersByOptionalChoiceGroup.get(o.optionalChoiceGroup());
+            if (list == null) {
+                list = new LinkedList<Setter<?>>();
+                optionSettersByOptionalChoiceGroup.put(o.optionalChoiceGroup(), list);
+            }
+            list.add(setter);
+        }
     }
 
     public List<Setter<?>> argumentSetters() {
@@ -150,9 +160,12 @@ public class CmdLineParser {
         final Parameters parameters = new Parameters(args);
 
         final Set<Setter<?>> observedSetters = new HashSet<Setter<?>>();
+        final Set<String> observedOptionNames = new HashSet<String>();
+
         int argIndex = 0;
 
         final Map<String, String> observedChoiceGroups = new HashMap<String, String>();
+        final Map<String, String> observedOptionalChoiceGroups = new HashMap<String, String>();
 
         while (parameters.hasNext()) {
             Setter<T> setter;
@@ -172,14 +185,29 @@ public class CmdLineParser {
                     throw new CmdLineException("<" + optionName + "> is not a valid option");
                 }
 
+                // Choice group (if present)
                 if (setter.option.choiceGroup().length() > 0) {
                     if (observedChoiceGroups.containsKey(setter.option.choiceGroup())
                             && !observedChoiceGroups.get(setter.option.choiceGroup()).equals(
                                     setter.option.name())) {
                         throw new CmdLineException("Only one of "
-                                + choiceGroupSummary(setter.option.choiceGroup()) + " is allowed");
+                                + choiceGroupSummary(optionSettersByChoiceGroup.get(setter.option
+                                        .choiceGroup())) + " is allowed");
                     }
                     observedChoiceGroups.put(setter.option.choiceGroup(), setter.option.name());
+                }
+
+                // Optional choice group (if present)
+                if (setter.option.optionalChoiceGroup().length() > 0) {
+                    if (observedOptionalChoiceGroups.containsKey(setter.option.optionalChoiceGroup())
+                            && !observedOptionalChoiceGroups.get(setter.option.optionalChoiceGroup()).equals(
+                                    setter.option.name())) {
+                        throw new CmdLineException("Only one of "
+                                + choiceGroupSummary(optionSettersByOptionalChoiceGroup.get(setter.option
+                                        .optionalChoiceGroup())) + " is allowed");
+                    }
+                    observedOptionalChoiceGroups.put(setter.option.optionalChoiceGroup(),
+                            setter.option.name());
                 }
 
                 try {
@@ -213,6 +241,9 @@ public class CmdLineParser {
                 }
             }
             observedSetters.add(setter);
+            if (setter.option != null) {
+                observedOptionNames.add(setter.option.name());
+            }
         }
 
         boolean suppressUsageErrors = false;
@@ -234,8 +265,18 @@ public class CmdLineParser {
             for (final Setter<?> setter : optionSetters) {
                 if (setter.option.choiceGroup().length() > 0
                         && !observedChoiceGroups.containsKey(setter.option.choiceGroup())) {
-                    throw new CmdLineException("One of " + choiceGroupSummary(setter.option.choiceGroup())
+                    throw new CmdLineException("One of "
+                            + choiceGroupSummary(optionSettersByChoiceGroup.get(setter.option.choiceGroup()))
                             + " is required");
+                }
+            }
+
+            // Make sure all required options are present for any options which define them
+            for (final Setter<?> setter : optionSetters) {
+                if (setter.option.requires().length() > 0
+                        && !observedOptionNames.contains(setter.option.requires())) {
+                    throw new CmdLineException("Option <" + setter.option.requires() + "> is required for <"
+                            + setter.option.name() + ">");
                 }
             }
 
@@ -277,16 +318,15 @@ public class CmdLineParser {
         return null;
     }
 
-    private String choiceGroupSummary(final String choiceGroup) {
+    private String choiceGroupSummary(final LinkedList<Setter<?>> choiceGroupSetters) {
         final StringBuilder sb = new StringBuilder();
-        final LinkedList<Setter<?>> list = optionSettersByChoiceGroup.get(choiceGroup);
-        for (final Iterator<Setter<?>> i = list.iterator(); i.hasNext();) {
+        for (final Iterator<Setter<?>> i = choiceGroupSetters.iterator(); i.hasNext();) {
             final Setter<?> setter = i.next();
             if (sb.length() > 0) {
                 if (i.hasNext()) {
                     sb.append(", ");
                 } else {
-                    sb.append(list.size() == 2 ? " or " : ", or ");
+                    sb.append(choiceGroupSetters.size() == 2 ? " or " : ", or ");
                 }
             }
             sb.append("<" + setter.option.name() + ">");

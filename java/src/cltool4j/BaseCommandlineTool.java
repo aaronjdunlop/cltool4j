@@ -1,5 +1,6 @@
 package cltool4j;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,6 +73,8 @@ public abstract class BaseCommandlineTool {
 
     @Option(name = "-version", aliases = { "--version" }, hidden = true, ignoreRequired = true, usage = "Print version information")
     protected boolean printVersion = false;
+
+    private static String commandLineArguments;
 
     /**
      * Non-threadable tools use a single thread; {@link Threadable} tools default to either the optional
@@ -228,6 +231,15 @@ public abstract class BaseCommandlineTool {
      * @param args
      */
     public final static void run(final String[] args) {
+        // Record the full command-line
+        final StringBuilder sb = new StringBuilder();
+        for (final String arg : args) {
+            sb.append(arg);
+            sb.append(' ');
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        commandLineArguments = sb.toString();
+
         try {
             @SuppressWarnings("unchecked")
             final Class<? extends BaseCommandlineTool> c = (Class<? extends BaseCommandlineTool>) Class
@@ -408,6 +420,10 @@ public abstract class BaseCommandlineTool {
         parser.printUsage(new OutputStreamWriter(System.err), includeHiddenOptions);
     }
 
+    protected String commandLineArguments() {
+        return commandLineArguments;
+    }
+
     /**
      * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
      * @throws IOException
@@ -424,7 +440,7 @@ public abstract class BaseCommandlineTool {
     public Iterable<String> inputLines(final InputStream is) throws IOException {
         try {
             return new Iterable<String>() {
-                final BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                final BufferedReader br = new BufferedReader(new InputStreamReader(inputStream(is)));
                 String line = br.readLine();
 
                 @Override
@@ -466,7 +482,28 @@ public abstract class BaseCommandlineTool {
      * @throws IOException
      */
     protected BufferedReader inputAsBufferedReader() throws IOException {
-        return new BufferedReader(new InputStreamReader(System.in));
+        return new BufferedReader(new InputStreamReader(inputStream(System.in)));
+    }
+
+    /**
+     * Returns the specified {@link InputStream}, wrapped in a {@link GZIPInputStream} if the input is in gzip
+     * format.
+     * 
+     * @param is Input stream
+     * @return An {@link InputStream}, wrapping the original {@link InputStream}, buffered and decompressing
+     *         if appropriate
+     * @throws IOException If the read fails
+     */
+    private InputStream inputStream(final InputStream is) throws IOException {
+        final BufferedInputStream bis = new BufferedInputStream(is, 16384);
+        bis.mark(256);
+        final byte[] first2Bytes = new byte[2];
+        bis.read(first2Bytes);
+        bis.reset();
+        if (first2Bytes[0] == 0x1f && first2Bytes[1] == 0x8b) {
+            return new GZIPInputStream(bis);
+        }
+        return bis;
     }
 
     /**
@@ -509,11 +546,7 @@ public abstract class BaseCommandlineTool {
             System.exit(-1);
         }
 
-        InputStream is = new FileInputStream(f);
-        if (f.getName().endsWith(".gz")) {
-            is = new GZIPInputStream(is);
-        }
-        return is;
+        return inputStream(new FileInputStream(f));
     }
 
     /**
