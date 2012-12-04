@@ -435,13 +435,21 @@ public abstract class BaseCommandlineTool {
     /**
      * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
      * 
-     * @throws IOException if the {@link InputStream} cannot be read
+     * @throws IOException if an error occurs while reading from the {@link InputStream}.
      */
     public Iterable<String> inputLines(final InputStream is) throws IOException {
+        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is))));
+    }
+
+    /**
+     * @return an {@link Iterator} over input lines, split by the supplied {@link BufferedReader}.
+     * 
+     * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
+     */
+    public Iterable<String> inputLines(final BufferedReader reader) throws IOException {
         try {
             return new Iterable<String>() {
-                final BufferedReader br = new BufferedReader(new InputStreamReader(inputStream(is)));
-                String line = br.readLine();
+                String line = reader.readLine();
 
                 @Override
                 public Iterator<String> iterator() {
@@ -457,7 +465,7 @@ public abstract class BaseCommandlineTool {
                         public String next() {
                             final String tmp = line;
                             try {
-                                line = br.readLine();
+                                line = reader.readLine();
                             } catch (final IOException e) {
                                 line = null;
                             }
@@ -500,7 +508,7 @@ public abstract class BaseCommandlineTool {
         final byte[] first2Bytes = new byte[2];
         bis.read(first2Bytes);
         bis.reset();
-        if (first2Bytes[0] == 0x1f && first2Bytes[1] == 0x8b) {
+        if (first2Bytes[0] == (byte) 0x1f && first2Bytes[1] == (byte) 0x8b) {
             return new GZIPInputStream(bis);
         }
         return bis;
