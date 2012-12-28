@@ -272,8 +272,9 @@ public class CmdLineParser {
             }
 
             // Make sure all required options are present for any options which define them
-            for (final Setter<?> setter : optionSetters) {
-                if (setter.option.requires().length() > 0
+            for (final Setter<?> setter : observedSetters) {
+                if (setter.option != null && setter.option.requires() != null
+                        && setter.option.requires().length() > 0
                         && !observedOptionNames.contains(setter.option.requires())) {
                     throw new CmdLineException("Option <" + setter.option.requires() + "> is required for <"
                             + setter.option.name() + ">");

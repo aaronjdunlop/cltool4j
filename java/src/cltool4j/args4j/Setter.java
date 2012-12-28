@@ -127,4 +127,9 @@ public abstract class Setter<T> {
     public String usage() {
         return option != null ? option.usage() : argument.usage();
     }
+
+    @Override
+    public String toString() {
+        return "Setter: " + option.name();
+    }
 }
