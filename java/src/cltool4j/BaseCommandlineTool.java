@@ -502,7 +502,7 @@ public abstract class BaseCommandlineTool {
      *         if appropriate
      * @throws IOException If the read fails
      */
-    private InputStream inputStream(final InputStream is) throws IOException {
+    private static InputStream inputStream(final InputStream is) throws IOException {
         final BufferedInputStream bis = new BufferedInputStream(is, 16384);
         bis.mark(256);
         final byte[] first2Bytes = new byte[2];
@@ -536,7 +536,7 @@ public abstract class BaseCommandlineTool {
      * @return InputStream
      * @throws IOException
      */
-    protected InputStream fileAsInputStream(final String filename) throws IOException {
+    public static InputStream fileAsInputStream(final String filename) throws IOException {
         return fileAsInputStream(new File(filename));
     }
 
@@ -547,7 +547,7 @@ public abstract class BaseCommandlineTool {
      * @return InputStream
      * @throws IOException
      */
-    protected InputStream fileAsInputStream(final File f) throws IOException {
+    public static InputStream fileAsInputStream(final File f) throws IOException {
         if (!f.exists()) {
             System.err.println("Unable to find file: " + f.getName());
             System.err.flush();
@@ -564,7 +564,7 @@ public abstract class BaseCommandlineTool {
      * @return BufferedReader
      * @throws IOException
      */
-    protected BufferedReader fileAsBufferedReader(final File f) throws IOException {
+    public static BufferedReader fileAsBufferedReader(final File f) throws IOException {
         return new BufferedReader(new InputStreamReader(fileAsInputStream(f)));
     }
 
@@ -575,7 +575,7 @@ public abstract class BaseCommandlineTool {
      * @return BufferedReader
      * @throws IOException
      */
-    protected BufferedReader fileAsBufferedReader(final String filename) throws IOException {
+    public static BufferedReader fileAsBufferedReader(final String filename) throws IOException {
         return fileAsBufferedReader(new File(filename));
     }
 

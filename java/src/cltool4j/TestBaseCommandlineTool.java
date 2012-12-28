@@ -359,12 +359,14 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         final WithRequires tool = new WithRequires();
 
         // We should be able to run without either option
-        executeTool(tool, "", "");
+        String output = executeTool(tool, "", "");
+        assertEquals("", output);
         // Or with both
-        executeTool(tool, "-o1 1 -o2 2", "");
+        output = executeTool(tool, "-o1 1 -o2 2", "");
+        assertEquals("", output);
 
         // But -o1 depends on -o2
-        String output = executeTool(tool, "-o1 1", "");
+        output = executeTool(tool, "-o1 1", "");
         assertTrue(output.startsWith("Option <-o2> is required for <-o1>"));
 
         // And -o2 depends on -o1

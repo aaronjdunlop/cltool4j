@@ -45,7 +45,7 @@ public abstract class ToolTestCase {
      */
     protected String executeToolFromFile(final BaseCommandlineTool tool, final String args,
             final String inputFilename) throws Exception {
-        return executeTool(tool, args, tool.fileAsInputStream(UNIT_TEST_DIR + inputFilename));
+        return executeTool(tool, args, BaseCommandlineTool.fileAsInputStream(UNIT_TEST_DIR + inputFilename));
     }
 
     /**
