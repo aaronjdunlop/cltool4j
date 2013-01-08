@@ -62,20 +62,24 @@ public final class EnumAliasMap {
         aliasMap.put(e.toString().toLowerCase(), e);
         aliasList.add(e.toString());
 
-        // And all the aliases
-        for (final String alias : aliases) {
-            // Skip 'aliases' which are the same as the enum name
-            if (alias.equals(e.toString().toLowerCase())) {
-                continue;
-            }
+        // 'null' is valid, indicating no aliases for this enum value
+        if (aliases != null && aliases.length > 0 && aliases[0] != null) {
+            // And all the aliases
+            for (final String alias : aliases) {
+                // Skip 'aliases' which are the same as the enum name
+                if (alias.equals(e.toString().toLowerCase())) {
+                    continue;
+                }
 
-            // Map the alias
-            if (aliasMap.put(alias, e) != null) {
-                throw new IllegalAnnotationError("Alias '" + alias + "' used more than once for enum "
-                        + e.getClass());
+                // Map the alias
+                if (aliasMap.put(alias, e) != null) {
+                    throw new IllegalAnnotationError("Alias '" + alias + "' used more than once for enum "
+                            + e.getClass());
+                }
+                aliasList.add(alias);
             }
-            aliasList.add(alias);
         }
+
         // Add null delimiter
         aliasList.add(null);
     }

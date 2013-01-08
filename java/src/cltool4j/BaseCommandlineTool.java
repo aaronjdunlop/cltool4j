@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,7 @@ import java.io.OutputStreamWriter;
 import java.io.SequenceInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -56,6 +58,9 @@ import cltool4j.args4j.Option;
  */
 public abstract class BaseCommandlineTool {
 
+    /** Maximum width (in screen columns) of usage output. Longer lines will be wrapped to meet this limit */
+    private final static int USAGE_OUTPUT_WIDTH = 120;
+
     @Option(name = "-help", aliases = { "--help", "-?" }, ignoreRequired = true, usage = "Print detailed usage information")
     protected boolean printHelp = false;
 
@@ -73,6 +78,14 @@ public abstract class BaseCommandlineTool {
 
     @Option(name = "-version", aliases = { "--version" }, hidden = true, ignoreRequired = true, usage = "Print version information")
     protected boolean printVersion = false;
+
+    /**
+     * If specified, execution will pause after {@link #setup()}, waiting for a single carriage-return. Any
+     * input will be discarded. This is primarily intended to allow connecting a profiler and starting data
+     * collection after 1-time setup is complete.
+     */
+    @Option(name = "-pause", hidden = true, usage = "Pause for a single carriage-return after setup")
+    protected boolean pauseAfterSetup = false;
 
     private static String commandLineArguments;
 
@@ -251,50 +264,64 @@ public abstract class BaseCommandlineTool {
         }
     }
 
-    @SuppressWarnings("null")
     private static void run(final Class<? extends BaseCommandlineTool> c, final String[] args)
             throws Exception {
-        BaseCommandlineTool tool = null;
-        // For Scala objects
-        try {
-            tool = (BaseCommandlineTool) c.getField("MODULE$").get(null);
-        } catch (final Exception e) {
-            // For Java
-            try {
-                tool = c.getConstructor(new Class[] {}).newInstance(new Object[] {});
-            } catch (final Exception e2) {
-                System.err.println("Unable to instantiate target class: " + e2.getMessage());
-                System.exit(-1);
-            }
-        }
+
+        // Configure GlobalConfigProperties from property files or command-line options (-O).
+        initGlobalConfigProperties(c, args);
 
         try {
-            tool.runInternal(args);
+            createTool(c).runInternal(args);
         } catch (final Exception e) {
             e.printStackTrace();
         }
     }
 
+    private static BaseCommandlineTool createTool(final Class<? extends BaseCommandlineTool> c) {
+        // Create and initialize an instance of the tool class
+        // For Scala objects
+        try {
+            return (BaseCommandlineTool) c.getField("MODULE$").get(null);
+        } catch (final Exception e) {
+            // For Java
+            try {
+                return c.getConstructor(new Class[] {}).newInstance(new Object[] {});
+            } catch (final Exception e2) {
+                System.err.println("Unable to instantiate target class: " + e2.getMessage());
+                System.exit(-1);
+            }
+            // Will never happen, but the compiler can't see the 'System.exit()' call above
+            return null;
+        }
+    }
+
     protected final void runInternal(final String[] args) throws Exception {
+
         final CmdLineParser parser = new CmdLineParser(this);
-        parser.setUsageWidth(120);
+        parser.setUsageWidth(USAGE_OUTPUT_WIDTH);
 
         try {
             parser.parseArguments(args);
 
             // If the user specified -help, print extended usage information and exit
             if (printHelp) {
-                // Don't print out default value for help flag
-                printHelp = false;
-
-                printUsage(parser, true);
+                // Create a new tool instance, and _don't_ run the argument parser on this one - in the case
+                // that the user specified some arguments other than -?/-help, we want to output the _real_
+                // defaults, not whatever they might have entered.
+                final BaseCommandlineTool tool = createTool(getClass());
+                final CmdLineParser helpParser = new CmdLineParser(tool);
+                helpParser.setUsageWidth(parser.getUsageWidth());
+                tool.printUsage(helpParser, true);
                 return;
+
             } else if (printReadme) {
                 printToStdout(getClass().getClassLoader().getResourceAsStream("META-INF/README.txt"));
                 return;
+
             } else if (printLicense) {
                 printToStdout(getClass().getClassLoader().getResourceAsStream("META-INF/LICENSE.txt"));
                 return;
+
             } else if (printVersion) {
                 try {
                     final Class<? extends BaseCommandlineTool> c = getClass();
@@ -320,38 +347,6 @@ public abstract class BaseCommandlineTool {
                 return;
             }
 
-            // Configure GlobalProperties from property files or command-line options (-O)
-
-            // First, read 'META-INF/defaults.properties' if present in the jar
-            final InputStream defaultPropIs = getClass().getClassLoader().getResourceAsStream(
-                    "META-INF/defaults.properties");
-            if (defaultPropIs != null) {
-                final Properties p = new Properties();
-                p.load(defaultPropIs);
-                GlobalConfigProperties.singleton().mergeUnder(p);
-            }
-
-            // Iterate through any property files specified, 'merging' the file contents together (in
-            // case of a duplicate key, the last one found wins)
-            for (final String o : options) {
-                final String[] keyValue = o.split("=");
-                if (keyValue.length != 2) {
-                    // Treat it as a property file name
-                    final Properties p = new Properties();
-                    p.load(new FileReader(o));
-                    GlobalConfigProperties.singleton().mergeOver(p);
-                }
-            }
-
-            // Now iterate though any key-value pairs specified directly on the command-line; those override
-            // properties loaded from files, and again, the last one found wins.
-            for (final String o : options) {
-                final String[] keyValue = o.split("=");
-                if (keyValue.length == 2) {
-                    GlobalConfigProperties.singleton().setProperty(keyValue[0], keyValue[1]);
-                }
-            }
-
             // Configure java.util.logging to log to the console, and only the message actually
             // logged, without any header or formatting.
             for (final Handler h : baseLogger.getHandlers()) {
@@ -363,8 +358,8 @@ public abstract class BaseCommandlineTool {
             baseLogger.setLevel(l);
 
             // If input files were specified on the command-line, check for the first one before running
-            // setup()
-            // If it cannot be found, we'd prefer to fail here than after a potentially expensive setup() call
+            // setup(). If it cannot be found, we'd prefer to fail here than after a potentially expensive
+            // setup() call
             if (inputFiles.length > 0 && inputFiles[0].length() > 0) {
                 if (!new File(inputFiles[0]).exists()) {
                     throw new CmdLineException("Unable to find file: " + inputFiles[0]);
@@ -378,15 +373,19 @@ public abstract class BaseCommandlineTool {
             return;
         }
 
+        if (pauseAfterSetup) {
+            BaseLogger.singleton().info("Setup complete. Hit [Enter] to continue: ");
+            // Read (and discard) a single input line
+            new BufferedReader(new InputStreamReader(System.in)).readLine();
+        }
+
         try {
             // Handle arguments
             if (inputFiles.length > 0 && inputFiles[0].length() > 0) {
                 // Handle one or more input files from the command-line, translating gzipped
                 // files as appropriate. Re-route multiple files into a single InputStream so we can execute
-                // the
-                // tool a single time.
-                // Open all files prior to processing, so we can fail early if one or more files cannot be
-                // opened
+                // the tool a single time. Open all files prior to processing, so we can fail early if one or
+                // more files cannot be opened
                 final LinkedList<InputStream> inputList = new LinkedList<InputStream>();
                 for (final String filename : inputFiles) {
                     inputList.add(fileAsInputStream(filename));
@@ -420,8 +419,70 @@ public abstract class BaseCommandlineTool {
         parser.printUsage(new OutputStreamWriter(System.err), includeHiddenOptions);
     }
 
+    /**
+     * Populates {@link GlobalConfigProperties} from the specified command-line options. We want to do this
+     * <i>before</i> initializing the tool class, so we have to parse the command-line ourselves here looking
+     * for instances of '-O <key>=<value>'. It's a bit of a hack, but without it, classes initialized during
+     * classloading (e.g. enum instances) won't have access to {@link GlobalConfigProperties}.
+     * 
+     * @param c
+     * @param options
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    protected static void initGlobalConfigProperties(final Class<? extends BaseCommandlineTool> c,
+            final String[] args) throws IOException, FileNotFoundException {
+
+        final ArrayList<String> options = new ArrayList<String>();
+        for (int i = 0; i < args.length - 1; i++) {
+            if ("-O".equals(args[i])) {
+                options.add(args[i + 1]);
+                i++;
+            }
+        }
+
+        // First, read 'META-INF/defaults.properties' if present in the jar
+        final InputStream defaultPropIs = c.getClassLoader().getResourceAsStream(
+                "META-INF/defaults.properties");
+        if (defaultPropIs != null) {
+            final Properties p = new Properties();
+            p.load(defaultPropIs);
+            GlobalConfigProperties.singleton().mergeUnder(p);
+        }
+
+        // Iterate through any property files specified, 'merging' the file contents together (in
+        // case of a duplicate key, the last one found wins)
+        for (final String o : options) {
+            final String[] keyValue = o.split("=");
+            if (keyValue.length != 2) {
+                // Treat it as a property file name
+                final Properties p = new Properties();
+                p.load(new FileReader(o));
+                GlobalConfigProperties.singleton().mergeOver(p);
+            }
+        }
+
+        // Now iterate though any key-value pairs specified directly on the command-line; those override
+        // properties loaded from files, and again, the last one found wins.
+        for (final String o : options) {
+            final String[] keyValue = o.split("=");
+            if (keyValue.length == 2) {
+                GlobalConfigProperties.singleton().setProperty(keyValue[0], keyValue[1]);
+            }
+        }
+    }
+
     protected String commandLineArguments() {
         return commandLineArguments;
+    }
+
+    /**
+     * @param skipHeaderLines The number of header lines to skip
+     * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
+     * @throws IOException
+     */
+    protected Iterable<String> inputLines(final int skipHeaderLines) throws IOException {
+        return inputLines(System.in, skipHeaderLines);
     }
 
     /**
@@ -429,16 +490,27 @@ public abstract class BaseCommandlineTool {
      * @throws IOException
      */
     protected Iterable<String> inputLines() throws IOException {
-        return inputLines(System.in);
+        return inputLines(System.in, 0);
     }
 
     /**
+     * @param skipHeaderLines The number of header lines to skip
+     * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
+     * 
+     * @throws IOException if an error occurs while reading from the {@link InputStream}.
+     */
+    public Iterable<String> inputLines(final InputStream is, final int skipHeaderLines) throws IOException {
+        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is))), skipHeaderLines);
+    }
+
+    /**
+     * @param skipHeaderLines The number of header lines to skip
      * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
      * 
      * @throws IOException if an error occurs while reading from the {@link InputStream}.
      */
     public Iterable<String> inputLines(final InputStream is) throws IOException {
-        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is))));
+        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is))), 0);
     }
 
     /**
@@ -446,10 +518,12 @@ public abstract class BaseCommandlineTool {
      * 
      * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
      */
-    public Iterable<String> inputLines(final BufferedReader reader) throws IOException {
+    public Iterable<String> inputLines(final BufferedReader reader, final int skipHeaderLines)
+            throws IOException {
         try {
             return new Iterable<String>() {
                 String line = reader.readLine();
+                int linesSkipped = 0;
 
                 @Override
                 public Iterator<String> iterator() {
@@ -463,8 +537,13 @@ public abstract class BaseCommandlineTool {
 
                         @Override
                         public String next() {
-                            final String tmp = line;
+                            String tmp = line;
                             try {
+                                for (; linesSkipped < skipHeaderLines; linesSkipped++) {
+                                    tmp = line;
+                                    line = reader.readLine();
+                                }
+                                tmp = line;
                                 line = reader.readLine();
                             } catch (final IOException e) {
                                 line = null;
@@ -744,7 +823,7 @@ public abstract class BaseCommandlineTool {
                 next();
             } catch (final IOException ex) {
                 // This should never happen
-                throw new Error("panic");
+                throw new Error("panic: " + ex.getMessage());
             }
         }
 

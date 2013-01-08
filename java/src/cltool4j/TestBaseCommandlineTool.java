@@ -240,16 +240,22 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     public void testExtendedUsageOutput() throws Exception {
         // Test with an invalid option
         final StringBuilder sb = new StringBuilder();
-        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-version] [-option opt] [-hidden] [files]\n");
+        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-version] [-pause] [-option opt] [-hidden] [files]\n");
         sb.append(" -help (--help,-?)    : Print detailed usage information\n");
         sb.append(" -O option / file     : Option or option file (file in Java properties format or option as key=value)\n");
         sb.append(" -v level             : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0;\n");
         sb.append("                        warning,-1; severe,-2; off,-3)   Default = info\n");
         sb.append(" -version (--version) : Print version information\n");
+        sb.append(" -pause               : Pause for a single carriage-return after setup\n");
         sb.append(" -option opt          : Integer option;   Default = 2\n");
         sb.append(" -hidden              : Hidden option\n");
 
+        // Basic check of -help output
         assertEquals(sb.toString(), executeTool(new Cat(), "-help", ""));
+
+        // Verify that if we run with -? and -option, the default reported for -option is still correct (i.e.,
+        // that we print help info prior to setting any values on the tool instance)
+        assertEquals(sb.toString(), executeTool(new Cat(), "-? -option 3", ""));
     }
 
     /**
@@ -473,6 +479,9 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         @SuppressWarnings("unused")
         @Option(name = "-hidden", hidden = true, usage = "Hidden option")
         public boolean hidden = false;
+
+        public Cat() {
+        }
 
         @Override
         public void setup() throws Exception {

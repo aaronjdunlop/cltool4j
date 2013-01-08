@@ -71,7 +71,7 @@ public final class FieldSetter<T> extends Setter<T> {
         final String defaultValueString = defaultValue.toString();
 
         // Don't print 'Default = false' for booleans
-        if (defaultValue instanceof Boolean && !((Boolean) defaultValue).booleanValue()) {
+        if (defaultValue instanceof Boolean) {
             return defaultUsage;
         }
 

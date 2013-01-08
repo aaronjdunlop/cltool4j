@@ -363,6 +363,20 @@ public class CmdLineParser {
         return (ArgumentParser<T>) argumentParsers.get(argumentClass);
     }
 
+    /**
+     * Returns the maximum width (in screen columns) of usage output. Longer usage output will be word-wrapped
+     * to meet this limit.
+     * 
+     * @return The maximum width of usage output
+     */
+    public int getUsageWidth() {
+        return usageWidth;
+    }
+
+    /**
+     * Sets the maximum width (in screen columns) of usage output. Longer usage output will be word-wrapped to
+     * meet this limit.
+     */
     public void setUsageWidth(final int usageWidth) {
         this.usageWidth = usageWidth;
     }
@@ -422,9 +436,9 @@ public class CmdLineParser {
         for (final Setter<?> h : argumentSetters) {
             printOption(w, h, len);
         }
-        for (final Setter<?> h : optionSetters) {
-            if (!h.option.hidden() || includeHidden) {
-                printOption(w, h, len);
+        for (final Setter<?> s : optionSetters) {
+            if (!s.option.hidden() || includeHidden) {
+                printOption(w, s, len);
             }
         }
 

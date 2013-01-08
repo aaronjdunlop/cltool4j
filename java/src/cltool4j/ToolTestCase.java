@@ -80,6 +80,7 @@ public abstract class ToolTestCase {
 
             // Execute the tool
             final String[] argArray = args.length() == 0 ? new String[0] : args.split(" ");
+            BaseCommandlineTool.initGlobalConfigProperties(tool.getClass(), argArray);
             tool.runInternal(argArray);
         } finally {
             // Restore STDIN, STDOUT, STDERR
