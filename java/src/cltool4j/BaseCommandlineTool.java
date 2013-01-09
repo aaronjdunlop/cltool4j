@@ -514,8 +514,22 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * @return an {@link Iterator} over input lines, split by the supplied {@link BufferedReader}.
+     * Returns an {@link Iterable} over all input lines.
      * 
+     * @param reader
+     * @return an {@link Iterator} over input lines, split by the supplied {@link BufferedReader}.
+     * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
+     */
+    public Iterable<String> inputLines(final BufferedReader reader) throws IOException {
+        return inputLines(reader, 0);
+    }
+
+    /**
+     * Returns an {@link Iterable} over all input lines.
+     * 
+     * @param reader
+     * @param skipHeaderLines
+     * @return an {@link Iterator} over input lines, split by the supplied {@link BufferedReader}.
      * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
      */
     public Iterable<String> inputLines(final BufferedReader reader, final int skipHeaderLines)
