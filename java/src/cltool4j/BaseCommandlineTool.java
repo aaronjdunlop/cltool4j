@@ -244,14 +244,18 @@ public abstract class BaseCommandlineTool {
      * @param args
      */
     public final static void run(final String[] args) {
-        // Record the full command-line
-        final StringBuilder sb = new StringBuilder();
-        for (final String arg : args) {
-            sb.append(arg);
-            sb.append(' ');
+        if (args.length == 0) {
+            commandLineArguments = "";
+        } else {
+            // Record the full command-line
+            final StringBuilder sb = new StringBuilder();
+            for (final String arg : args) {
+                sb.append(arg);
+                sb.append(' ');
+            }
+            sb.deleteCharAt(sb.length() - 1);
+            commandLineArguments = sb.toString();
         }
-        sb.deleteCharAt(sb.length() - 1);
-        commandLineArguments = sb.toString();
 
         try {
             @SuppressWarnings("unchecked")
