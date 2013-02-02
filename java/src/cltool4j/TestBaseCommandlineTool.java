@@ -520,6 +520,9 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         }
     }
 
+    /**
+     * Tests usage of {@link BaseCommandlineTool#currentInputFile}
+     */
     private static class Wc extends BaseCommandlineTool {
 
         private HashMap<String, Integer> lines = new HashMap<String, Integer>();

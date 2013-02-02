@@ -481,8 +481,32 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
+     * At logging levels >= {@link LogLevel#info}, outputs a progress-bar formatted as periods (at specified
+     * intervals) followed by a number (at larger intervals). E.g. '.....100'. Intended to report progress
+     * during applications which iterate silently over long input sequences.
+     * 
+     * @param dotInterval The interval at which to report a '.' progress indicator
+     * @param numericInterval The interval at which to report a numeric progress indicator
+     */
+    protected void progressBar(final int dotInterval, final int numericInterval, final int currentIteration) {
+        if (currentIteration == 0) {
+            return;
+        }
+
+        if (BaseLogger.singleton().isLoggable(Level.INFO)) {
+            if ((currentIteration % numericInterval) == 0) {
+                System.out.println(currentIteration);
+            } else if ((currentIteration % dotInterval) == 0) {
+                System.out.print(".");
+            }
+        }
+    }
+
+    /**
+     * Returns an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
+     * 
      * @param skipHeaderLines The number of header lines to skip
-     * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
+     * @return An {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
      * @throws IOException
      */
     protected Iterable<String> inputLines(final int skipHeaderLines) throws IOException {
@@ -721,8 +745,8 @@ public abstract class BaseCommandlineTool {
     /**
      * Prints the entire content of the {@link InputStream} to STDOUT.
      * 
-     * @param input
-     * @throws IOException
+     * @param input InputStream to read from
+     * @throws IOException if an error occurs reading from <code>input</code>
      */
     private void printToStdout(final InputStream input) throws IOException {
         final BufferedReader br = new BufferedReader(new InputStreamReader(input));
