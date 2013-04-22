@@ -49,7 +49,7 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
             // Allocate a queue large enough to contain several pending tasks for each thread, but small
             // enough to avoid attempting to schedule all future jobs at once.
             final BlockingQueue<FutureTask<R>> outputQueue = new LinkedBlockingQueue<FutureTask<R>>(
-                    maxThreads * 4);
+                maxThreads * 4);
             final OutputThread outputThread = new OutputThread(outputQueue);
             outputThread.start();
 
@@ -63,7 +63,7 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
             br.close();
 
             // Enqueue a marker
-            outputQueue.add(END_OF_INPUT_MARKER);
+            outputQueue.put(END_OF_INPUT_MARKER);
 
             // The output thread will exit when it comes to the termination marker
             outputThread.join();
