@@ -13,6 +13,8 @@ import java.io.OutputStreamWriter;
 import java.io.SequenceInputStream;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -79,6 +81,9 @@ public abstract class BaseCommandlineTool {
     @Option(name = "-version", aliases = { "--version" }, hidden = true, ignoreRequired = true, usage = "Print version information")
     protected boolean printVersion = false;
 
+    @Option(name = "-charset", hidden = true, usage = "Charset of all input (STDIN and files)")
+    private String inputCharset = null;
+
     /**
      * If specified, execution will pause after {@link #setup()}, waiting for a single carriage-return. Any
      * input will be discarded. This is primarily intended to allow connecting a profiler and starting data
@@ -132,6 +137,19 @@ public abstract class BaseCommandlineTool {
      * @throws Exception
      */
     protected abstract void run() throws Exception;
+
+    /**
+     * Returns a {@link Charset} which will be used to interpret input from {@link System#in} and from other
+     * {@link File} sources. Defaults to the platform default {@link Charset}, but can be overridden using the
+     * '-charset' option
+     * 
+     * @return a {@link Charset} which will be used to interpret input from {@link System#in} and from other
+     *         {@link File} sources
+     * @throws IllegalCharsetNameException If an illegal {@link Charset} is specified
+     */
+    protected Charset inputCharset() throws IllegalCharsetNameException {
+        return inputCharset == null ? Charset.defaultCharset() : Charset.forName(inputCharset);
+    }
 
     /**
      * Callback executed when starting to process a new input file. Subclasses may override
@@ -528,7 +546,8 @@ public abstract class BaseCommandlineTool {
      * @throws IOException if an error occurs while reading from the {@link InputStream}.
      */
     public Iterable<String> inputLines(final InputStream is, final int skipHeaderLines) throws IOException {
-        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is))), skipHeaderLines);
+        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is), inputCharset())),
+                skipHeaderLines);
     }
 
     /**
@@ -538,7 +557,7 @@ public abstract class BaseCommandlineTool {
      * @throws IOException if an error occurs while reading from the {@link InputStream}.
      */
     public Iterable<String> inputLines(final InputStream is) throws IOException {
-        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is))), 0);
+        return inputLines(new BufferedReader(new InputStreamReader(inputStream(is), inputCharset())), 0);
     }
 
     /**
@@ -611,7 +630,7 @@ public abstract class BaseCommandlineTool {
      * @throws IOException
      */
     protected BufferedReader inputAsBufferedReader() throws IOException {
-        return new BufferedReader(new InputStreamReader(inputStream(System.in)));
+        return new BufferedReader(new InputStreamReader(inputStream(System.in), inputCharset()));
     }
 
     /**
@@ -682,11 +701,23 @@ public abstract class BaseCommandlineTool {
      * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
      * 
      * @param f File
+     * @param charset
      * @return BufferedReader
      * @throws IOException
      */
-    public static BufferedReader fileAsBufferedReader(final File f) throws IOException {
-        return new BufferedReader(new InputStreamReader(fileAsInputStream(f)));
+    public static BufferedReader fileAsBufferedReader(final File f, final Charset charset) throws IOException {
+        return new BufferedReader(new InputStreamReader(fileAsInputStream(f), charset));
+    }
+
+    /**
+     * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
+     * 
+     * @param f File
+     * @return BufferedReader
+     * @throws IOException
+     */
+    public BufferedReader fileAsBufferedReader(final File f) throws IOException {
+        return new BufferedReader(new InputStreamReader(fileAsInputStream(f), inputCharset()));
     }
 
     /**
@@ -696,8 +727,20 @@ public abstract class BaseCommandlineTool {
      * @return BufferedReader
      * @throws IOException
      */
-    public static BufferedReader fileAsBufferedReader(final String filename) throws IOException {
-        return fileAsBufferedReader(new File(filename));
+    public static BufferedReader fileAsBufferedReader(final String filename, final Charset charset)
+            throws IOException {
+        return fileAsBufferedReader(new File(filename), charset);
+    }
+
+    /**
+     * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
+     * 
+     * @param filename
+     * @return BufferedReader
+     * @throws IOException
+     */
+    public BufferedReader fileAsBufferedReader(final String filename) throws IOException {
+        return fileAsBufferedReader(new File(filename), inputCharset());
     }
 
     /**
@@ -711,7 +754,7 @@ public abstract class BaseCommandlineTool {
      */
     protected String fileAsString(final String filename) throws IOException {
         final StringBuilder sb = new StringBuilder(10240);
-        final BufferedReader r = fileAsBufferedReader(filename);
+        final BufferedReader r = fileAsBufferedReader(filename, inputCharset());
         for (int c = r.read(); c != 0; c = r.read()) {
             sb.append((char) c);
         }

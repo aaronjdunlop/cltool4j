@@ -1,7 +1,6 @@
 package cltool4j;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +31,7 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
 
     @Override
     public final void run() throws Exception {
-        final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        final BufferedReader br = inputAsBufferedReader();
 
         if (maxThreads == 1) {
             // Single-threaded version is simple...
@@ -49,7 +48,7 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
             // Allocate a queue large enough to contain several pending tasks for each thread, but small
             // enough to avoid attempting to schedule all future jobs at once.
             final BlockingQueue<FutureTask<R>> outputQueue = new LinkedBlockingQueue<FutureTask<R>>(
-                maxThreads * 4);
+                    maxThreads * 4);
             final OutputThread outputThread = new OutputThread(outputQueue);
             outputThread.start();
 
