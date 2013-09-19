@@ -634,6 +634,17 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
+     * Convenience method; returns STDIN as a {@link BufferedReader}.
+     * 
+     * @param size Input buffer size
+     * @return STDIN
+     * @throws IOException
+     */
+    protected BufferedReader inputAsBufferedReader(final int size) throws IOException {
+        return new BufferedReader(new InputStreamReader(inputStream(System.in), inputCharset()), size);
+    }
+
+    /**
      * Returns the specified {@link InputStream}, wrapped in a {@link GZIPInputStream} if the input is in gzip
      * format.
      * 
