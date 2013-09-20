@@ -240,12 +240,13 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     public void testExtendedUsageOutput() throws Exception {
         // Test with an invalid option
         final StringBuilder sb = new StringBuilder();
-        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-version] [-pause] [-option opt] [-hidden] [files]\n");
+        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-version] [-charset] [-pause] [-option opt] [-hidden] [files]\n");
         sb.append(" -help (--help,-?)    : Print detailed usage information\n");
         sb.append(" -O option / file     : Option or option file (file in Java properties format or option as key=value)\n");
         sb.append(" -v level             : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0;\n");
         sb.append("                        warning,-1; severe,-2; off,-3)   Default = info\n");
         sb.append(" -version (--version) : Print version information\n");
+        sb.append(" -charset             : Charset of all input (STDIN and files)\n");
         sb.append(" -pause               : Pause for a single carriage-return after setup\n");
         sb.append(" -option opt          : Integer option;   Default = 2\n");
         sb.append(" -hidden              : Hidden option\n");
@@ -542,7 +543,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     }
 
     private static class WithMultivaluedOption extends BaseCommandlineTool {
-        @Option(name = "-i", multiValued = true, separator = ",", usage = "[args]", metaVar = "args")
+        @Option(name = "-i", separator = ",", usage = "[args]", metaVar = "args")
         private int[] intOpts = { 1 };
 
         @Override

@@ -84,17 +84,6 @@ public @interface Option {
     Class<? extends ArgumentParser> parser() default ArgumentParser.class;
 
     /**
-     * True if the option is multi-valued. If the annotated type is an array, {@link java.util.List},
-     * {@link java.util.Set}, or other implicitly multi-valued type, this defaults to true; otherwise, false.
-     * 
-     * TODO Remove - this is implicit in the annotated type
-     * 
-     * @return True if the option is multi-valued.
-     * 
-     */
-    boolean multiValued() default false;
-
-    /**
      * Separator to use for multi-valued parameters (e.g. -f 1,2,3). Note that multi-valued options can also
      * be specified by invoking the option multiple times (e.g. -f 1 -f 2 -f 3).
      * 

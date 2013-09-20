@@ -72,7 +72,7 @@ public abstract class BaseCommandlineTool {
     @Option(name = "-license", aliases = { "--license" }, hidden = true, ignoreRequired = true, usage = "Print license", requiredResource = "META-INF/LICENSE.txt")
     protected boolean printLicense = false;
 
-    @Option(name = "-O", metaVar = "option / file", multiValued = true, usage = "Option or option file (file in Java properties format or option as key=value)")
+    @Option(name = "-O", metaVar = "option / file", usage = "Option or option file (file in Java properties format or option as key=value)")
     protected String[] options = new String[0];
 
     @Option(name = "-v", metaVar = "level", usage = "Verbosity")

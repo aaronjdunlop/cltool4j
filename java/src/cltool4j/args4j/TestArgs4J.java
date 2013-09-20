@@ -538,7 +538,7 @@ public class TestArgs4J {
         @Option(name = "-ints", separator = ":")
         int[] ints;
 
-        @Option(name = "-array", multiValued = true)
+        @Option(name = "-array")
         String[] array;
 
         @Option(name = "-hashset")
