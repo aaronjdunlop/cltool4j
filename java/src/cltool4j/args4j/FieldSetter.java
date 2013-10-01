@@ -85,15 +85,15 @@ public final class FieldSetter<T> extends Setter<T> {
         if (isEnum()) {
 
             @SuppressWarnings("unchecked")
-            final String aliases = EnumAliasMap.singleton().usage((Class<? extends Enum<?>>) f.getType());
+            final String usage = EnumAliasMap.singleton().usage((Class<? extends Enum<?>>) f.getType());
 
             // If printing enum values one-per-line, print the default value on the first line; otherwise,
             // print it at the end of the list
-            if (aliases != null) {
-                if (defaultValueString != null && aliases.length() > 150) {
-                    return String.format("%s;   Default = %s\n%s", defaultUsage, defaultValueString, aliases);
+            if (usage != null) {
+                if (defaultValueString != null && usage.length() > 150) {
+                    return String.format("%s;   Default = %s\n%s", defaultUsage, defaultValueString, usage);
                 }
-                return String.format("%s  (%s)   Default = %s", defaultUsage, aliases, defaultValueString);
+                return String.format("%s  (%s)   Default = %s", defaultUsage, usage, defaultValueString);
             }
         }
 

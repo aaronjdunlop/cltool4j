@@ -75,7 +75,7 @@ public abstract class Setter<T> {
      */
     public abstract boolean isEnum();
 
-    public final String parameterName() {
+    public final String nameAndAliases() {
 
         if (argument != null) {
             return argument.metaVar() != null && argument.metaVar().length() > 0 ? argument.metaVar() : "arg"
@@ -101,7 +101,7 @@ public abstract class Setter<T> {
 
     public final int prefixLen() {
         final String metaVar = metaVar();
-        return parameterName().length() + (metaVar != null ? (metaVar.length() + 1) + 1 : 0);
+        return nameAndAliases().length() + (metaVar != null ? (metaVar.length() + 3) + 1 : 0);
     }
 
     public String metaVar() {
@@ -115,7 +115,8 @@ public abstract class Setter<T> {
 
     public String nameAndMeta() {
         if (option != null) {
-            return option.metaVar().length() > 0 ? parameterName() + " " + option.metaVar() : parameterName();
+            return option.metaVar().length() > 0 ? nameAndAliases() + " <" + option.metaVar() + ">"
+                    : nameAndAliases();
         }
         return metaVar();
     }

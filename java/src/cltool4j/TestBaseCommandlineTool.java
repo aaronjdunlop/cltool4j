@@ -110,11 +110,11 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("Argument <args> is required\n");
         sb.append("\n");
         sb.append("Usage: TestBaseCommandlineTool$WithRequiredMultivaluedArgument [-help] [-O option / file] [-v level] <args>\n");
-        sb.append(" args              : [args]\n");
-        sb.append(" -help (--help,-?) : Print detailed usage information\n");
-        sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
-        sb.append("                     severe,-2; off,-3)   Default = info\n");
+        sb.append(" args                : [args]\n");
+        sb.append(" -help (--help,-?)   : Print usage information\n");
+        sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
+        sb.append("                       severe,-2; off,-3)   Default = info\n");
 
         assertEquals(sb.toString(), executeTool(tool, "", ""));
     }
@@ -138,13 +138,13 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("Argument <arg0> is required\n");
         sb.append("\n");
         sb.append("Usage: TestBaseCommandlineTool$WithRequiredArgumentsAndMultivaluedArgument [-help] [-O option / file] [-v level] <arg0> <arg1> <values>\n");
-        sb.append(" arg0              : arg0\n");
-        sb.append(" arg1              : arg1\n");
-        sb.append(" values            : Other required arguments\n");
-        sb.append(" -help (--help,-?) : Print detailed usage information\n");
-        sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
-        sb.append("                     severe,-2; off,-3)   Default = info\n");
+        sb.append(" arg0                : arg0\n");
+        sb.append(" arg1                : arg1\n");
+        sb.append(" values              : Other required arguments\n");
+        sb.append(" -help (--help,-?)   : Print usage information\n");
+        sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
+        sb.append("                       severe,-2; off,-3)   Default = info\n");
         tool = new WithRequiredArgumentsAndMultivaluedArgument();
         assertEquals(sb.toString(), executeTool(tool, "", ""));
 
@@ -152,13 +152,13 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("Argument <values> is required\n");
         sb.append("\n");
         sb.append("Usage: TestBaseCommandlineTool$WithRequiredArgumentsAndMultivaluedArgument [-help] [-O option / file] [-v level] <arg0> <arg1> <values>\n");
-        sb.append(" arg0              : arg0\n");
-        sb.append(" arg1              : arg1\n");
-        sb.append(" values            : Other required arguments\n");
-        sb.append(" -help (--help,-?) : Print detailed usage information\n");
-        sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
-        sb.append("                     severe,-2; off,-3)   Default = info\n");
+        sb.append(" arg0                : arg0\n");
+        sb.append(" arg1                : arg1\n");
+        sb.append(" values              : Other required arguments\n");
+        sb.append(" -help (--help,-?)   : Print usage information\n");
+        sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
+        sb.append("                       severe,-2; off,-3)   Default = info\n");
 
         tool = new WithRequiredArgumentsAndMultivaluedArgument();
         assertEquals(sb.toString(), executeTool(tool, "arg1 arg2", ""));
@@ -189,11 +189,11 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("<-badarg> is not a valid option\n");
         sb.append("\n");
         sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-option opt] [files]\n");
-        sb.append(" -help (--help,-?) : Print detailed usage information\n");
-        sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
-        sb.append("                     severe,-2; off,-3)   Default = info\n");
-        sb.append(" -option opt       : Integer option;   Default = 2\n");
+        sb.append(" -help (--help,-?)   : Print usage information\n");
+        sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
+        sb.append("                       severe,-2; off,-3)   Default = info\n");
+        sb.append(" -option <opt>       : Integer option;   Default = 2\n");
 
         assertEquals(sb.toString(), executeTool(new Cat(), "-badarg", ""));
 
@@ -202,16 +202,16 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("Option <-option> is required\n");
         sb.append("\n");
         sb.append("Usage: TestBaseCommandlineTool$WithRequiredArguments [-help] [-O option / file] [-v level] [-xt threads] <-option value> <arg0> [arg1] [values]\n");
-        sb.append(" arg0              : arg0\n");
-        sb.append(" arg1              : arg1\n");
-        sb.append(" values            : [other args]\n");
-        sb.append(" -help (--help,-?) : Print detailed usage information\n");
-        sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
-        sb.append("                     severe,-2; off,-3)   Default = info\n");
-        sb.append(" -xt threads       : Maximum threads;   Default = "
+        sb.append(" arg0                : arg0\n");
+        sb.append(" arg1                : arg1\n");
+        sb.append(" values              : [other args]\n");
+        sb.append(" -help (--help,-?)   : Print usage information\n");
+        sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
+        sb.append("                       severe,-2; off,-3)   Default = info\n");
+        sb.append(" -xt <threads>       : Maximum threads;   Default = "
                 + Runtime.getRuntime().availableProcessors() + "\n");
-        sb.append(" -option value     : o\n");
+        sb.append(" -option <value>     : o\n");
 
         WithRequiredArguments tool = new WithRequiredArguments();
         assertEquals(sb.toString(), executeTool(tool, "argument", ""));
@@ -221,16 +221,16 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("Argument <arg0> is required\n");
         sb.append("\n");
         sb.append("Usage: TestBaseCommandlineTool$WithRequiredArguments [-help] [-O option / file] [-v level] [-xt threads] <-option value> <arg0> [arg1] [values]\n");
-        sb.append(" arg0              : arg0\n");
-        sb.append(" arg1              : arg1\n");
-        sb.append(" values            : [other args]\n");
-        sb.append(" -help (--help,-?) : Print detailed usage information\n");
-        sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
-        sb.append("                     severe,-2; off,-3)   Default = info\n");
-        sb.append(" -xt threads       : Maximum threads;   Default = "
+        sb.append(" arg0                : arg0\n");
+        sb.append(" arg1                : arg1\n");
+        sb.append(" values              : [other args]\n");
+        sb.append(" -help (--help,-?)   : Print usage information\n");
+        sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
+        sb.append("                       severe,-2; off,-3)   Default = info\n");
+        sb.append(" -xt <threads>       : Maximum threads;   Default = "
                 + Runtime.getRuntime().availableProcessors() + "\n");
-        sb.append(" -option value     : o\n");
+        sb.append(" -option <value>     : o\n");
 
         tool = new WithRequiredArguments();
         assertEquals(sb.toString(), executeTool(tool, "-option foo", ""));
@@ -241,14 +241,14 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         // Test with an invalid option
         final StringBuilder sb = new StringBuilder();
         sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-version] [-charset] [-pause] [-option opt] [-hidden] [files]\n");
-        sb.append(" -help (--help,-?)    : Print detailed usage information\n");
-        sb.append(" -O option / file     : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level             : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0;\n");
+        sb.append(" -help (--help,-?)    : Print usage information\n");
+        sb.append(" -O <option / file>   : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>           : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0;\n");
         sb.append("                        warning,-1; severe,-2; off,-3)   Default = info\n");
         sb.append(" -version (--version) : Print version information\n");
         sb.append(" -charset             : Charset of all input (STDIN and files)\n");
         sb.append(" -pause               : Pause for a single carriage-return after setup\n");
-        sb.append(" -option opt          : Integer option;   Default = 2\n");
+        sb.append(" -option <opt>        : Integer option;   Default = 2\n");
         sb.append(" -hidden              : Hidden option\n");
 
         // Basic check of -help output
@@ -268,19 +268,19 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append("<-option> is not a valid option\n");
         sb.append("\n");
         sb.append("Usage: TestBaseCommandlineTool$WithEnumField [-help] [-O option / file] [-v level] [enum] [files]\n");
-        sb.append(" enum              : Enum value;   Default = VeryLongOptionNameB\n");
-        sb.append("                       VeryLongOptionNameA,a\n");
-        sb.append("                       VeryLongOptionNameB,b\n");
-        sb.append("                       VeryLongOptionNameC,c\n");
-        sb.append("                       VeryLongOptionNameD,d\n");
-        sb.append("                       VeryLongOptionNameE,e\n");
-        sb.append("                       VeryLongOptionNameF,f\n");
-        sb.append("                       VeryLongOptionNameG,g\n");
-        sb.append("                       VeryLongOptionNameH,h\n");
-        sb.append(" -help (--help,-?) : Print detailed usage information\n");
-        sb.append(" -O option / file  : Option or option file (file in Java properties format or option as key=value)\n");
-        sb.append(" -v level          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
-        sb.append("                     severe,-2; off,-3)   Default = info\n");
+        sb.append(" enum                : Enum value;   Default = VeryLongOptionNameB\n");
+        sb.append("                         VeryLongOptionNameA,a\n");
+        sb.append("                         VeryLongOptionNameB,b\n");
+        sb.append("                         VeryLongOptionNameC,c\n");
+        sb.append("                         VeryLongOptionNameD,d\n");
+        sb.append("                         VeryLongOptionNameE,e\n");
+        sb.append("                         VeryLongOptionNameF,f\n");
+        sb.append("                         VeryLongOptionNameG,g\n");
+        sb.append("                         VeryLongOptionNameH,h\n");
+        sb.append(" -help (--help,-?)   : Print usage information\n");
+        sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
+        sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
+        sb.append("                       severe,-2; off,-3)   Default = info\n");
 
         assertEquals(sb.toString(), executeTool(new WithEnumField(), "-option foo", ""));
     }

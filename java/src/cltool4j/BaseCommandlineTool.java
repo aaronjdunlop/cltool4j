@@ -63,17 +63,20 @@ public abstract class BaseCommandlineTool {
     /** Maximum width (in screen columns) of usage output. Longer lines will be wrapped to meet this limit */
     private final static int USAGE_OUTPUT_WIDTH = 120;
 
-    @Option(name = "-help", aliases = { "--help", "-?" }, ignoreRequired = true, usage = "Print detailed usage information")
+    @Option(name = "-help", aliases = { "--help", "-?" }, ignoreRequired = true, usage = "Print usage information")
     protected boolean printHelp = false;
 
-    @Option(name = "-readme", aliases = { "--readme" }, hidden = true, ignoreRequired = true, usage = "Print full documentation", requiredResource = "META-INF/README.txt")
+    @Option(name = "-long-help", ignoreRequired = true, usage = "Print detailed usage information", requiredResource = "META-INF/HELP.txt")
+    protected boolean printLongHelp = false;
+
+    @Option(name = "-readme", aliases = { "--readme" }, hidden = true, ignoreRequired = true, usage = "Print README file", requiredResource = "META-INF/README.txt")
     protected boolean printReadme = false;
 
     @Option(name = "-license", aliases = { "--license" }, hidden = true, ignoreRequired = true, usage = "Print license", requiredResource = "META-INF/LICENSE.txt")
     protected boolean printLicense = false;
 
     @Option(name = "-O", metaVar = "option / file", usage = "Option or option file (file in Java properties format or option as key=value)")
-    protected String[] options = new String[0];
+    protected String[] options;
 
     @Option(name = "-v", metaVar = "level", usage = "Verbosity")
     protected LogLevel verbosityLevel = LogLevel.info;
@@ -95,8 +98,8 @@ public abstract class BaseCommandlineTool {
     private static String commandLineArguments;
 
     /**
-     * Non-threadable tools use a single thread; {@link Threadable} tools default to either the optional
-     * 'defaultThreads' parameter or the number of CPUs
+     * Non-threadable tools use a single thread; tools annotated as {@link Threadable} default to either the
+     * optional 'defaultThreads' parameter or the number of CPUs
      */
     @Option(name = "-xt", metaVar = "threads", usage = "Maximum threads", requiredAnnotations = { Threadable.class })
     protected int maxThreads = getClass().getAnnotation(Threadable.class) != null ? (getClass()
@@ -334,6 +337,10 @@ public abstract class BaseCommandlineTool {
                 final CmdLineParser helpParser = new CmdLineParser(tool);
                 helpParser.setUsageWidth(parser.getUsageWidth());
                 tool.printUsage(helpParser, true);
+                return;
+
+            } else if (printLongHelp) {
+                printToStdout(getClass().getClassLoader().getResourceAsStream("META-INF/HELP.txt"));
                 return;
 
             } else if (printReadme) {

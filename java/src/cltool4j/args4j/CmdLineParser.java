@@ -237,7 +237,7 @@ public class CmdLineParser {
                     setter.parseNextArgument(parameters);
                 } catch (final IllegalArgumentException e) {
                     throw new CmdLineException("\"" + parameters.current() + "\" is not valid for argument <"
-                            + setter.parameterName() + ">");
+                            + setter.nameAndAliases() + ">");
                 }
             }
             observedSetters.add(setter);
@@ -257,7 +257,7 @@ public class CmdLineParser {
             // make sure that all mandatory options are present
             for (final Setter<?> setter : optionSetters) {
                 if (setter.option.required() && !observedSetters.contains(setter)) {
-                    throw new CmdLineException("Option <" + setter.parameterName() + "> is required");
+                    throw new CmdLineException("Option <" + setter.nameAndAliases() + "> is required");
                 }
             }
 
@@ -284,7 +284,7 @@ public class CmdLineParser {
             // make sure that all mandatory arguments are present
             for (final Setter<?> setter : argumentSetters) {
                 if (setter.argument.required() && !observedSetters.contains(setter)) {
-                    throw new CmdLineException("Argument <" + setter.parameterName() + "> is required");
+                    throw new CmdLineException("Argument <" + setter.nameAndAliases() + "> is required");
                 }
             }
         }
@@ -463,8 +463,8 @@ public class CmdLineParser {
         final int widthUsage = usageWidth - 4 - widthMetadata;
 
         // Line wrapping
-        final List<String> namesAndMetas = wrapLines(setter.nameAndMeta(), widthMetadata);
-        final List<String> usages = wrapLines(setter.usage(), widthUsage);
+        final List<String> namesAndMetas = wrapLines(setter.nameAndMeta(), widthMetadata, null);
+        final List<String> usages = wrapLines(setter.usage(), widthUsage, null);
 
         // Output
         final int outputLines = Math.max(namesAndMetas.size(), usages.size());
@@ -484,25 +484,31 @@ public class CmdLineParser {
      * 
      * @param line Line to wrap
      * @param maxLength maximum length for the resulting parts
+     * @param linePrefix
      * @return list of all wrapped parts
      */
-    private List<String> wrapLines(final String line, final int maxLength) {
+    public static List<String> wrapLines(final String line, final int maxLength, String linePrefix) {
         final List<String> rv = new ArrayList<String>();
+
+        if (linePrefix == null) {
+            linePrefix = "";
+        }
+
         for (String restOfLine : line.split("\\n")) {
-            while (restOfLine.length() > maxLength) {
+            while (restOfLine.length() + linePrefix.length() > maxLength) {
                 // Wrap at space
                 int lineLength;
-                final String candidate = restOfLine.substring(0, maxLength);
+                final String candidate = restOfLine.substring(0, maxLength - linePrefix.length());
                 final int sp = candidate.lastIndexOf(' ');
                 if (sp > maxLength * 3 / 4) {
                     lineLength = sp;
                 } else {
                     lineLength = maxLength;
                 }
-                rv.add(restOfLine.substring(0, lineLength));
+                rv.add(linePrefix + restOfLine.substring(0, lineLength));
                 restOfLine = restOfLine.substring(lineLength).trim();
             }
-            rv.add(restOfLine);
+            rv.add(linePrefix + restOfLine);
         }
         return rv;
     }
