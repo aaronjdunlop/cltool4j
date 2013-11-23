@@ -16,6 +16,7 @@ import java.util.Map;
 
 import cltool4j.args4j.CmdLineParser;
 import cltool4j.args4j.EnumAliasMap;
+import cltool4j.args4j.Option;
 import cltool4j.args4j.Setter;
 
 import com.sun.javadoc.AnnotationDesc;
@@ -27,13 +28,22 @@ import com.sun.javadoc.RootDoc;
 
 public class UsageDoclet {
 
-    private static final String JAVADOC_DOCUMENTATION = "_javadocDocumentation";
-    private static final String FIELDNAME = "_fieldname";
-
+    //
+    // Names of elements in @Option
+    //
     private static final String METAVAR_ELEMENT = "metaVar";
     private static final String NAME_ELEMENT = "name";
     private static final String USAGE_ELEMENT = "usage";
+    private static final String CHOICE_GROUP_ELEMENT = "choiceGroup";
+    private static final String OPTIONAL_CHOICE_GROUP_ELEMENT = "optionalChoiceGroup";
+    private static final String REQUIRED_RESOURCE_ELEMENT = "requiredResource";
+    private static final String REQUIRED_ANNOTATIONS_ELEMENT = "requiredAnnotations";
 
+    // Keys for other information we may store in a map along with the elements
+    private static final String JAVADOC_DOCUMENTATION = "_javadocDocumentation";
+    private static final String FIELDNAME = "_fieldname";
+
+    // Maximum line width
     private final static int USAGE_WIDTH = 80;
 
     public static boolean start(final RootDoc root) {
@@ -43,6 +53,32 @@ public class UsageDoclet {
             final String runtimeClasspath = runtimeClasspath(root.options());
             final PrintStream out = outputFile != null ? new PrintStream(new FileOutputStream(outputFile))
                     : System.out;
+            // The main root class is first - any other classes are inner classes of that class
+            final ClassDoc rootClass = root.classes()[0];
+
+            //
+            // Print class-level documentation for only the target class (not any of its superclasses)
+            //
+            final String commentText = rootClass.commentText();
+            if (commentText != null) {
+                for (final String line : commentText.split("\n ?\n ?")) {
+                    if (line.contains("<pre>")) {
+                        out.println(line.replaceAll("</?pre>", "").replaceAll("\n *", "\n").trim());
+                    } else {
+                        for (final String wrappedLine : CmdLineParser.wrapLines(escapeJavadoc(line
+                                .replaceAll("\n ?", " ").trim()), USAGE_WIDTH, "")) {
+                            out.println(wrappedLine);
+                        }
+                    }
+                    out.println();
+                }
+            }
+
+            // Instantiate the tool - among other things, this will force classloading any enumerations and
+            // populating the EnumAliasMap
+            final BaseCommandlineTool toolInstance = (BaseCommandlineTool) Class.forName(
+                    rootClass.qualifiedTypeName()).newInstance();
+
             //
             // Work down from the top of the class hierarchy, accumulating fields and methods annotated with
             // '@Option' and class-level annotations (note - BaseCommandlineTool and its subclasses treat all
@@ -52,30 +88,6 @@ public class UsageDoclet {
             final HashSet<String> classAnnotations = new HashSet<String>();
             final LinkedList<ClassDoc> classHierarchy = new LinkedList<ClassDoc>();
 
-            // The main root class is first - any other classes are inner classes of that class
-            final ClassDoc rootClass = root.classes()[0];
-
-            // Instantiate the tool - among other things, this will force classloading any enumerations and
-            // populating the EnumAliasMap
-            final BaseCommandlineTool toolInstance = (BaseCommandlineTool) Class.forName(
-                    rootClass.qualifiedTypeName()).newInstance();
-
-            //
-            // Print class-level documentation for only the target class (not any of its superclasses)
-            //
-            final String commentText = rootClass.commentText();
-            if (commentText != null) {
-                for (final String line : commentText.split("\n ?\n ?")) {
-                    for (final String wrappedLine : CmdLineParser.wrapLines(
-                            escapeJavadoc(line.replaceAll("\n ?", " ").trim()), USAGE_WIDTH, "")) {
-                        out.println(wrappedLine);
-                    }
-                    out.println();
-                }
-            }
-
-            out.println("===== Command-line Options =====\n");
-
             for (ClassDoc classDoc = rootClass; classDoc != null; classDoc = classDoc.superclass()) {
                 classHierarchy.addFirst(classDoc);
 
@@ -84,22 +96,38 @@ public class UsageDoclet {
                 }
             }
 
+            // Maps choice group -> a list of the options in that group. E.g. "group" -> ["-a", "-b", "-c"]
+            final Map<String, List<String>> choiceGroups = new HashMap<String, List<String>>();
+            // Maps optional choice group -> a list of the options in that group. E.g. "group" -> ["-a", "-b",
+            // "-c"]
+            final Map<String, List<String>> optionalChoiceGroups = new HashMap<String, List<String>>();
+
+            // Name and documentation of configuration options, as defined by OPT_x fields
+            final List<String[]> configOptions = new ArrayList<String[]>();
+
             for (final ClassDoc classDoc : classHierarchy) {
                 // First, handle fields annotated with '@Option'
                 for (final FieldDoc field : classDoc.fields()) {
                     final Map<String, String> annotationMap = options(field.name(), field.annotations(),
-                            field.commentText(), runtimeClasspath, classAnnotations);
-                    if (annotationMap == null) {
-                        continue;
+                            field.commentText(), runtimeClasspath, classAnnotations, choiceGroups,
+                            optionalChoiceGroups);
+
+                    if (annotationMap != null) {
+                        annotationElements.add(annotationMap);
+
+                    } else if (field.name().startsWith("OPT_")) {
+                        configOptions.add(new String[] {
+                                (String) toolInstance.getClass().getField(field.name()).get(toolInstance),
+                                field.commentText() });
                     }
 
-                    annotationElements.add(annotationMap);
                 }
 
                 // Now any methods similarly annotated with '@Option'
                 for (final MethodDoc method : classDoc.methods()) {
                     final Map<String, String> annotationMap = options(method.name(), method.annotations(),
-                            method.commentText(), runtimeClasspath, classAnnotations);
+                            method.commentText(), runtimeClasspath, classAnnotations, choiceGroups,
+                            optionalChoiceGroups);
                     if (annotationMap == null) {
                         continue;
                     }
@@ -108,7 +136,21 @@ public class UsageDoclet {
                 }
             }
 
-            printUsage(out, toolInstance, annotationElements);
+            out.println("===== Command-line Options =====\n");
+            printUsage(out, toolInstance, annotationElements, choiceGroups, optionalChoiceGroups);
+
+            if (!configOptions.isEmpty()) {
+                out.println("\n===== Configuration Options (specified with '-O') =====\n");
+
+                for (final String[] opt : configOptions) {
+                    out.println(opt[0] + '\n');
+                    for (final String wrappedLine : CmdLineParser.wrapLines(
+                            escapeJavadoc(opt[1].replaceAll("\n ?", " ").trim()), USAGE_WIDTH, "  ")) {
+                        out.println(wrappedLine);
+                    }
+                    out.println();
+                }
+            }
 
             // We were successful, so return true
             return true;
@@ -146,24 +188,28 @@ public class UsageDoclet {
     }
 
     private static Map<String, String> options(final String name, final AnnotationDesc[] annotations,
-            final String documentation, final String runtimeClasspath, final HashSet<String> classAnnotations) {
+            final String documentation, final String runtimeClasspath,
+            final HashSet<String> classAnnotations, final Map<String, List<String>> choiceGroups,
+            final Map<String, List<String>> optionalChoiceGroups) {
 
+        // Find the '@Option' annotation. Generally, it's the only annotation, but occasionally a field or
+        // method will have others
         for (final AnnotationDesc a : annotations) {
-            if ("cltool4j.args4j.Option".equals(a.annotationType().toString())) {
+            if (Option.class.getName().equals(a.annotationType().toString())) {
 
                 final Map<String, String> annotationElements = keyValueMap(a);
                 annotationElements.put(FIELDNAME, name);
 
                 // Handle the 'requiredResource' element - return null if a required resource is not
                 // present in CLASSPATH
-                final String requiredResource = annotationElements.get("requiredResource");
+                final String requiredResource = annotationElements.get(REQUIRED_RESOURCE_ELEMENT);
                 if (requiredResource != null && !new File(runtimeClasspath + "/" + requiredResource).exists()) {
                     return null;
                 }
 
                 // Handle the 'requiredAnnotation' element - return null if a required annotation
                 // is not present
-                final String requiredAnnotations = annotationElements.get("requiredAnnotations");
+                final String requiredAnnotations = annotationElements.get(REQUIRED_ANNOTATIONS_ELEMENT);
                 if (requiredAnnotations != null) {
                     for (final String ra : requiredAnnotations.replaceAll("[{} ]", "")
                             .replaceAll("\\.class", "").split(",")) {
@@ -171,6 +217,29 @@ public class UsageDoclet {
                             return null;
                         }
                     }
+                }
+
+                // Handle the 'choiceGroup' element - if included, add this option's name to the choice-group
+                // list
+                final String choiceGroup = annotationElements.get(CHOICE_GROUP_ELEMENT);
+                if (choiceGroup != null) {
+                    List<String> choiceGroupList = choiceGroups.get(choiceGroup);
+                    if (choiceGroupList == null) {
+                        choiceGroupList = new ArrayList<String>();
+                        choiceGroups.put(choiceGroup, choiceGroupList);
+                    }
+                    choiceGroupList.add(annotationElements.get(NAME_ELEMENT));
+                }
+
+                // Similarly, the 'optionalChoiceGroup' element
+                final String optionalChoiceGroup = annotationElements.get(OPTIONAL_CHOICE_GROUP_ELEMENT);
+                if (optionalChoiceGroup != null) {
+                    List<String> optionalChoiceGroupList = optionalChoiceGroups.get(optionalChoiceGroup);
+                    if (optionalChoiceGroupList == null) {
+                        optionalChoiceGroupList = new ArrayList<String>();
+                        optionalChoiceGroups.put(optionalChoiceGroup, optionalChoiceGroupList);
+                    }
+                    optionalChoiceGroupList.add(annotationElements.get(NAME_ELEMENT));
                 }
 
                 if (documentation != null && documentation.length() > 0) {
@@ -184,7 +253,7 @@ public class UsageDoclet {
 
     private static String escapeJavadoc(final String javadoc) {
         String escaped = javadoc.replaceAll(" *\n *", " ");
-        escaped = escaped.replaceAll("\\{@link #(.+?)\\}", "$1");
+        escaped = escaped.replaceAll("\\{@link #?(.+?)\\}", "$1");
         return escaped;
     }
 
@@ -205,7 +274,8 @@ public class UsageDoclet {
      * @param includeHidden Include options annotated as 'hidden'
      */
     private static void printUsage(final PrintStream out, final BaseCommandlineTool toolInstance,
-            final List<Map<String, String>> optionAnnotations) {
+            final List<Map<String, String>> optionAnnotations, final Map<String, List<String>> choiceGroups,
+            final Map<String, List<String>> optionalChoiceGroups) {
 
         // determine the length of the option + metavar first
         int len = 0;
@@ -216,7 +286,7 @@ public class UsageDoclet {
         // then print
         for (final Iterator<Map<String, String>> i = optionAnnotations.iterator(); i.hasNext();) {
             final Map<String, String> elements = i.next();
-            printOption(new PrintWriter(out), toolInstance, elements, len);
+            printOption(new PrintWriter(out), toolInstance, elements, len, choiceGroups, optionalChoiceGroups);
             // 2 blank lines between options
             if (i.hasNext()) {
                 out.println('\n');
@@ -256,7 +326,8 @@ public class UsageDoclet {
      * @param len Maximum length of metadata column
      */
     private static void printOption(final PrintWriter out, final BaseCommandlineTool toolInstance,
-            final Map<String, String> annotationElements, final int len) {
+            final Map<String, String> annotationElements, final int len,
+            final Map<String, List<String>> choiceGroups, final Map<String, List<String>> optionalChoiceGroups) {
 
         // Find the width of the two columns
         final int widthMetadata = Math.min(len, (USAGE_WIDTH - 4) / 2);
@@ -297,7 +368,33 @@ public class UsageDoclet {
                 out.println(javadocLine);
             }
         }
+
+        if (annotationElements.containsKey(CHOICE_GROUP_ELEMENT)) {
+            printChoiceGroup(out, "One of ", " is required",
+                    choiceGroups.get(annotationElements.get(CHOICE_GROUP_ELEMENT)));
+
+        } else if (annotationElements.containsKey(OPTIONAL_CHOICE_GROUP_ELEMENT)) {
+            printChoiceGroup(out, "Only one of ", " is permitted",
+                    optionalChoiceGroups.get(annotationElements.get(OPTIONAL_CHOICE_GROUP_ELEMENT)));
+        }
+
         out.flush();
+    }
+
+    private static void printChoiceGroup(final PrintWriter out, final String prefix, final String suffix,
+            final List<String> choiceGroupMembers) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append('\n');
+        sb.append(prefix);
+        for (final String option : choiceGroupMembers) {
+            sb.append("<" + option + ">, ");
+        }
+        sb.delete(sb.length() - 2, sb.length());
+        sb.append(suffix);
+
+        for (final String javadocLine : CmdLineParser.wrapLines(sb.toString(), USAGE_WIDTH, "    ")) {
+            out.println(javadocLine);
+        }
     }
 
     private static String nameAndMeta(final Map<String, String> annotationElements) {
