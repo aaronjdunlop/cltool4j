@@ -72,7 +72,7 @@ public abstract class BaseCommandlineTool {
     @Option(name = "-readme", aliases = { "--readme" }, hidden = true, ignoreRequired = true, usage = "Print README file", requiredResource = "META-INF/README.txt")
     protected boolean printReadme = false;
 
-    @Option(name = "-license", aliases = { "--license" }, hidden = true, ignoreRequired = true, usage = "Print license", requiredResource = "META-INF/LICENSE.txt")
+    @Option(name = "-license", aliases = { "--license" }, hidden = true, ignoreRequired = true, usage = "Print license information", requiredResource = "META-INF/LICENSE.txt")
     protected boolean printLicense = false;
 
     @Option(name = "-O", metaVar = "option / file", usage = "Option or option file (file in Java properties format or option as key=value)")
@@ -297,8 +297,10 @@ public abstract class BaseCommandlineTool {
 
         try {
             createTool(c).runInternal(args);
-        } catch (final Exception e) {
-            e.printStackTrace();
+
+        } catch (final Throwable t) {
+            t.printStackTrace();
+            System.exit(-1);
         }
     }
 
@@ -396,10 +398,10 @@ public abstract class BaseCommandlineTool {
             }
 
             setup();
-        } catch (final CmdLineException e) {
+        } catch (final Exception e) {
             System.err.println(e.getMessage() + '\n');
             printUsage(parser, false);
-            return;
+            System.exit(-1);
         }
 
         if (pauseAfterSetup) {
@@ -429,6 +431,7 @@ public abstract class BaseCommandlineTool {
                 // Handle input on STDIN
                 run();
             }
+
         } finally {
 
             cleanup();

@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.security.Permission;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
  * Provides commonly-used functionality for testing command-line tools.
@@ -17,6 +21,27 @@ import java.io.PrintStream;
  */
 public abstract class ToolTestCase {
     protected final static String UNIT_TEST_DIR = "unit-test-data/";
+
+    /**
+     * Trap {@link System#exit(int)} calls from {@link BaseCommandlineTool}
+     */
+    @BeforeClass
+    public static void suiteSetup() {
+        final SecurityManager securityManager = new SecurityManager() {
+            @Override
+            public void checkPermission(final Permission permission) {
+                if (permission.getName().startsWith("exitVM")) {
+                    throw new SecurityException("System.exit trapped");
+                }
+            }
+        };
+        System.setSecurityManager(securityManager);
+    }
+
+    @AfterClass
+    public static void suiteTearDown() {
+        System.setSecurityManager(null);
+    }
 
     /**
      * Executes the tool with the given arguments, returning the tool output as a String. Output combines
@@ -81,7 +106,11 @@ public abstract class ToolTestCase {
             // Execute the tool
             final String[] argArray = args.length() == 0 ? new String[0] : args.split(" ");
             BaseCommandlineTool.initGlobalConfigProperties(tool.getClass(), argArray);
-            tool.runInternal(argArray);
+            try {
+                tool.runInternal(argArray);
+            } catch (final SecurityException e) {
+                // This is expected when we trap System.exit()
+            }
         } finally {
             // Restore STDIN, STDOUT, STDERR
             System.setIn(systemIn);
