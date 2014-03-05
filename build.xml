@@ -2,6 +2,8 @@
 
 <project name="cltool" default="dist" basedir=".">
 
+	<property environment="env" />
+	
     <target name="javadoc" description="Package JavaDoc">
         <javadoc destdir="build-doc/javadoc" classpath="java/lib/junit.jar:java/lib/log4j.jar">
             <fileset dir="java/src" includes="**/*.java" excludes="**/Test*.java,**/Profile*.java,**/All*Tests.java,**/*TestCase.java" />
@@ -11,7 +13,7 @@
     <target name="compile" description="Compile">
         <delete dir="build" failonerror="false" />
         <mkdir dir="build" />
-        <javac srcdir="java/src" destdir="build" classpath="java/lib/junit.jar:java/lib/jvmstat.jar" debug="true" includeantruntime="false" />
+        <javac srcdir="java/src" destdir="build" classpath="java/lib/junit.jar:java/lib/jvmstat.jar:${env.JAVA_HOME}/lib/tools.jar" debug="true" includeantruntime="false" />
     </target>
 
     <target name="dist" depends="compile" description="Build release jar">
