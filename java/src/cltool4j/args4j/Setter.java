@@ -56,6 +56,8 @@ public abstract class Setter<T> {
 
     /**
      * Adds or sets a value which will be applied to the bean after all arguments have been parsed.
+     * 
+     * @throws CmdLineException if unable to process the value
      */
     protected abstract void addValue(T value) throws CmdLineException;
 

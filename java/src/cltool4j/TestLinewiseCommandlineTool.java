@@ -11,12 +11,12 @@ public class TestLinewiseCommandlineTool extends ToolTestCase {
      * Tests ordering of multithreaded output, verifying that the lines are returned in the order read even
      * when 2 concurrent threads are processing the file.
      * 
-     * @throws Exception
+     * @throws Exception if an error occurs while executing the tool
      */
     @Test
     public void testLinewiseCat() throws Exception {
-        String filename = "simple.txt";
-        String expectedOutput = ToolTestCase.unitTestFileAsString(filename);
+        final String filename = "simple.txt";
+        final String expectedOutput = ToolTestCase.unitTestFileAsString(filename);
         // First, single-threaded
         assertEquals(expectedOutput, executeToolFromFile(new LinewiseCat(), "-xt 1", filename));
 

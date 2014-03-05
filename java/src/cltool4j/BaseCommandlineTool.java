@@ -137,7 +137,7 @@ public abstract class BaseCommandlineTool {
      * Execute the tool's core functionality. If the tool is threadable, this method must be thread-safe and
      * reentrant.
      * 
-     * @throws Exception
+     * @throws Exception if an error occurs while executing the tool
      */
     protected abstract void run() throws Exception;
 
@@ -158,7 +158,7 @@ public abstract class BaseCommandlineTool {
      * Callback executed when starting to process a new input file. Subclasses may override
      * {@link #beginFile(String)} if they wish to be notified when the input source changes.
      * 
-     * @param filename
+     * @param filename File
      */
     protected void beginFile(final String filename) {
     }
@@ -189,7 +189,7 @@ public abstract class BaseCommandlineTool {
      * computationally expensive. i.e., is it more expensive to connect to a running VM or to fork a new
      * process? Perhaps the order of the search should be reversed?
      * 
-     * @param args
+     * @param args Command-line arguments
      */
     public static void main(final String[] args) throws Exception {
 
@@ -237,6 +237,7 @@ public abstract class BaseCommandlineTool {
             if (mainClass.endsWith(".jar")) {
                 final JarFile j = new JarFile(mainClass);
                 mainClass = j.getManifest().getMainAttributes().getValue("Main-Class");
+                j.close();
             }
 
         } catch (final Throwable t2) {
@@ -262,7 +263,7 @@ public abstract class BaseCommandlineTool {
      * 
      * Infers the subclass which was invoked on the command-line by looking back one level on the stack.
      * 
-     * @param args
+     * @param args Command-line arguments
      */
     public final static void run(final String[] args) {
         if (args.length == 0) {
@@ -457,10 +458,10 @@ public abstract class BaseCommandlineTool {
      * for instances of '-O <key>=<value>'. It's a bit of a hack, but without it, classes initialized during
      * classloading (e.g. enum instances) won't have access to {@link GlobalConfigProperties}.
      * 
-     * @param c
-     * @param options
-     * @throws IOException
-     * @throws FileNotFoundException
+     * @param c Class
+     * @param args Command-line arguments
+     * @throws IOException If an error occurs while reading from a config file
+     * @throws FileNotFoundException If unable to find a config file specified with '-o'
      */
     protected static void initGlobalConfigProperties(final Class<? extends BaseCommandlineTool> c,
             final String[] args) throws IOException, FileNotFoundException {
@@ -516,7 +517,8 @@ public abstract class BaseCommandlineTool {
      * @param dotInterval The interval at which to report a '.' progress indicator
      * @param numericInterval The interval at which to report a numeric progress indicator
      */
-    protected void progressBar(final int dotInterval, final int numericInterval, final int currentIteration) {
+    public static void progressBar(final int dotInterval, final int numericInterval,
+            final int currentIteration) {
         if (currentIteration == 0) {
             return;
         }
@@ -535,7 +537,7 @@ public abstract class BaseCommandlineTool {
      * 
      * @param skipHeaderLines The number of header lines to skip
      * @return An {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
-     * @throws IOException
+     * @throws IOException If an error occurs while reading from {@link System#in}
      */
     protected Iterable<String> inputLines(final int skipHeaderLines) throws IOException {
         return inputLines(System.in, skipHeaderLines);
@@ -543,13 +545,17 @@ public abstract class BaseCommandlineTool {
 
     /**
      * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
-     * @throws IOException
+     * @throws IOException if an error occurs while reading from {@link System#in}
      */
     protected Iterable<String> inputLines() throws IOException {
         return inputLines(System.in, 0);
     }
 
     /**
+     * Returns an {@link Iterable} over all input lines (excluding initial 'header' lines, as specified by
+     * <code>skipHeaderLines</code>).
+     * 
+     * @param is Source of input
      * @param skipHeaderLines The number of header lines to skip
      * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
      * 
@@ -561,7 +567,7 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * @param skipHeaderLines The number of header lines to skip
+     * @param is Source of input
      * @return an {@link Iterator} over input lines, split as they would be by a {@link BufferedReader}.
      * 
      * @throws IOException if an error occurs while reading from the {@link InputStream}.
@@ -573,7 +579,7 @@ public abstract class BaseCommandlineTool {
     /**
      * Returns an {@link Iterable} over all input lines.
      * 
-     * @param reader
+     * @param reader Source of input
      * @return an {@link Iterator} over input lines, split by the supplied {@link BufferedReader}.
      * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
      */
@@ -582,11 +588,13 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * Returns an {@link Iterable} over all input lines.
+     * Returns an {@link Iterable} over all input lines (excluding initial 'header' lines, as specified by
+     * <code>skipHeaderLines</code>).
      * 
-     * @param reader
-     * @param skipHeaderLines
+     * @param reader Source of input
+     * @param skipHeaderLines The number of header lines to skip
      * @return an {@link Iterator} over input lines, split by the supplied {@link BufferedReader}.
+     * 
      * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
      */
     public Iterable<String> inputLines(final BufferedReader reader, final int skipHeaderLines)
@@ -634,21 +642,23 @@ public abstract class BaseCommandlineTool {
     }
 
     /**
-     * Convenience method; returns STDIN as a {@link BufferedReader}.
+     * Convenience method; returns STDIN as a {@link BufferedReader}, decoding with the current
+     * {@link Charset} (as specified by '-charset').
      * 
      * @return STDIN
-     * @throws IOException
+     * @throws IOException if an error occurs while reading from {@link System#in}.
      */
     protected BufferedReader inputAsBufferedReader() throws IOException {
         return new BufferedReader(new InputStreamReader(inputStream(System.in), inputCharset()));
     }
 
     /**
-     * Convenience method; returns STDIN as a {@link BufferedReader}.
+     * Convenience method; returns STDIN as a {@link BufferedReader}, using the specified buffer
+     * <code>size</code> and decoding with the current {@link Charset} (as specified by '-charset').
      * 
      * @param size Input buffer size
      * @return STDIN
-     * @throws IOException
+     * @throws IOException if an error occurs while reading from {@link System#in}.
      */
     protected BufferedReader inputAsBufferedReader(final int size) throws IOException {
         return new BufferedReader(new InputStreamReader(inputStream(System.in), inputCharset()), size);
@@ -679,7 +689,7 @@ public abstract class BaseCommandlineTool {
      * Convenience method; returns STDIN as a {@link String}.
      * 
      * @return STDIN
-     * @throws IOException
+     * @throws IOException If an error occurs while reading from {@link System#in}
      */
     protected String inputAsString() throws IOException {
         final StringBuilder sb = new StringBuilder();
@@ -693,9 +703,9 @@ public abstract class BaseCommandlineTool {
     /**
      * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
      * 
-     * @param filename
+     * @param filename File to open
      * @return InputStream
-     * @throws IOException
+     * @throws IOException If an error occurs while opening <code>filename</code>
      */
     public static InputStream fileAsInputStream(final String filename) throws IOException {
         return fileAsInputStream(new File(filename));
@@ -706,7 +716,7 @@ public abstract class BaseCommandlineTool {
      * 
      * @param f File
      * @return InputStream
-     * @throws IOException
+     * @throws IOException If an error occurs while opening <code>f</code>
      */
     public static InputStream fileAsInputStream(final File f) throws IOException {
         if (!f.exists()) {
@@ -722,9 +732,9 @@ public abstract class BaseCommandlineTool {
      * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
      * 
      * @param f File
-     * @param charset
+     * @param charset {@link Charset} to use to decode the file
      * @return BufferedReader
-     * @throws IOException
+     * @throws IOException If an error occurs while opening <code>f</code>
      */
     public static BufferedReader fileAsBufferedReader(final File f, final Charset charset) throws IOException {
         return new BufferedReader(new InputStreamReader(fileAsInputStream(f), charset));
@@ -735,7 +745,7 @@ public abstract class BaseCommandlineTool {
      * 
      * @param f File
      * @return BufferedReader
-     * @throws IOException
+     * @throws IOException If an error occurs while opening <code>f</code>
      */
     public BufferedReader fileAsBufferedReader(final File f) throws IOException {
         return new BufferedReader(new InputStreamReader(fileAsInputStream(f), inputCharset()));
@@ -744,9 +754,9 @@ public abstract class BaseCommandlineTool {
     /**
      * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
      * 
-     * @param filename
+     * @param filename File
      * @return BufferedReader
-     * @throws IOException
+     * @throws IOException If an error occurs while opening <code>filename</code>
      */
     public static BufferedReader fileAsBufferedReader(final String filename, final Charset charset)
             throws IOException {
@@ -756,9 +766,9 @@ public abstract class BaseCommandlineTool {
     /**
      * Convenience method; opens the specified file, uncompressing GZIP'd files as appropriate.
      * 
-     * @param filename
+     * @param filename File
      * @return BufferedReader
-     * @throws IOException
+     * @throws IOException If an error occurs while opening <code>filename</code>
      */
     public BufferedReader fileAsBufferedReader(final String filename) throws IOException {
         return fileAsBufferedReader(new File(filename), inputCharset());
@@ -769,9 +779,9 @@ public abstract class BaseCommandlineTool {
      * This method is not particularly efficient, and may consume large amounts of CPU and memory if executed
      * on a large file.
      * 
-     * @param filename
+     * @param filename File
      * @return InputStream
-     * @throws IOException
+     * @throws IOException If an error occurs while opening <code>filename</code>
      */
     protected String fileAsString(final String filename) throws IOException {
         final StringBuilder sb = new StringBuilder(10240);
@@ -786,9 +796,9 @@ public abstract class BaseCommandlineTool {
      * Convenience method; returns an iterator over the lines in the specified file, uncompressing GZIP'd
      * files as appropriate.
      * 
-     * @param f
+     * @param f File
      * @return InputStream
-     * @throws IOException
+     * @throws IOException If an error occurs reading from <code>f</code>
      */
     protected Iterable<String> fileLines(final File f) throws IOException {
         return inputLines(fileAsInputStream(f));
@@ -798,9 +808,9 @@ public abstract class BaseCommandlineTool {
      * Convenience method; returns an iterator over the lines in the specified file, uncompressing GZIP'd
      * files as appropriate.
      * 
-     * @param filename
+     * @param filename File
      * @return InputStream
-     * @throws IOException
+     * @throws IOException If an error occurs while reading from <code>f</code>
      */
     protected Iterable<String> fileLines(final String filename) throws IOException {
         return inputLines(fileAsInputStream(filename));

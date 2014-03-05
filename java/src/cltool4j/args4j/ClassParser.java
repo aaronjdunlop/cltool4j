@@ -111,11 +111,7 @@ class ClassParser {
     /**
      * Protects against ambiguous argument ordering (e.g., required arguments which follow optional args).
      * 
-     * @param argument
-     * @param parser
-     * @param foundOptionalArgument
-     * @return true if we have encountered an optional argument
-     * @throws CmdLineException
+     * @param parser Command-line parser
      */
     private void checkArgumentOrdering(final CmdLineParser parser) {
 

@@ -16,7 +16,6 @@ import org.junit.Test;
 
 import cltool4j.ConfigProperties.InvalidConfigurationException;
 import cltool4j.args4j.Argument;
-import cltool4j.args4j.CmdLineParser;
 import cltool4j.args4j.EnumAliasMap;
 import cltool4j.args4j.Option;
 
@@ -28,7 +27,7 @@ import cltool4j.args4j.Option;
 public class TestBaseCommandlineTool extends ToolTestCase {
 
     /**
-     * Verifies that the {@link BaseCommandlineTool#setup(CmdLineParser)} method is executed properly
+     * Verifies that the {@link BaseCommandlineTool#setup()} method is executed properly
      */
     @Test
     public void testSetup() throws Exception {
@@ -46,7 +45,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     }
 
     /**
-     * Tests iterating over input using the {@link java.lang.Iterable<String>} returned by
+     * Tests iterating over input using the {@link java.lang.Iterable} returned by
      * {@link BaseCommandlineTool#inputLines()}.
      */
     @Test
@@ -385,7 +384,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     public void testFileAlerts() throws Exception {
         final Wc tool = new Wc();
         final String output = executeTool(tool, "unit-test-data/file1.txt unit-test-data/file2.txt",
-                (InputStream) null);
+                (InputStream) null, false);
         assertEquals("unit-test-data/file1.txt : 1\nunit-test-data/file2.txt : 2\n", output);
     }
 
@@ -471,13 +470,13 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         }
     }
 
+    @SuppressWarnings("unused")
     private static class Cat extends BaseCommandlineTool {
         private boolean setupFlag = false;
 
         @Option(name = "-option", metaVar = "opt", usage = "Integer option")
         public int option = 2;
 
-        @SuppressWarnings("unused")
         @Option(name = "-hidden", hidden = true, usage = "Hidden option")
         public boolean hidden = false;
 

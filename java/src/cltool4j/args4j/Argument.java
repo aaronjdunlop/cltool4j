@@ -47,7 +47,10 @@ public @interface Argument {
      */
     int index() default 0;
 
-    /** See {@link Option#multiValued()}. */
+    /**
+     * If true, this {@link Argument} will be parsed as a collection or array (note that this can usually be
+     * inferred from the variable type)
+     */
     boolean multiValued() default false;
 
     /** See {@link Option#separator()}. */

@@ -51,11 +51,10 @@ public class CmdLineParser {
      * 
      * @param bean instance of a class annotated by {@link Option} and {@link Argument}. this object will
      *            receive values.
-     * @throws CmdLineException
      * 
      * @throws IllegalAnnotationError if the option bean class is using args4j annotations incorrectly.
      */
-    public CmdLineParser(final Object bean) throws CmdLineException {
+    public CmdLineParser(final Object bean) {
 
         registerDefaultParsers();
 
@@ -384,7 +383,7 @@ public class CmdLineParser {
     /**
      * Prints one-line usage summary.
      * 
-     * @param out
+     * @param out Output destination
      * @param includeHiddenOptions Include options marked as 'hidden'
      */
     public void printOneLineUsage(final Writer out, final boolean includeHiddenOptions) {
@@ -484,7 +483,7 @@ public class CmdLineParser {
      * 
      * @param line Line to wrap
      * @param maxLength maximum length for the resulting parts
-     * @param linePrefix
+     * @param linePrefix Prefix to prepend to each output line
      * @return list of all wrapped parts
      */
     public static List<String> wrapLines(final String line, final int maxLength, String linePrefix) {

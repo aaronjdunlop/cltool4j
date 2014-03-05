@@ -78,7 +78,7 @@ public abstract class LinewiseCommandlineTool<R> extends BaseCommandlineTool {
     /**
      * Outputs the result to STDOUT
      * 
-     * @param result
+     * @param result Result to write
      */
     protected void output(final R result) {
         final String s = result.toString();
