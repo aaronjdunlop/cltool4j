@@ -632,6 +632,7 @@ public abstract class BaseCommandlineTool {
 
                     @Override
                     public void remove() {
+                        throw new UnsupportedOperationException();
                     }
                 };
             }
