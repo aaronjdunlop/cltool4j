@@ -35,7 +35,7 @@ public abstract class Setter<T> {
      * 
      * @param parameters Command-line parameters
      * @throws IllegalArgumentException if parsing is not possible
-     * @throws CmdLineException
+     * @throws CmdLineException if unable to process the parameters
      */
     public void parseNextOperand(final Parameters parameters) throws IllegalArgumentException,
             CmdLineException {
@@ -47,7 +47,7 @@ public abstract class Setter<T> {
      * 
      * @param parameters Command-line parameters
      * @throws IllegalArgumentException if parsing is not possible
-     * @throws CmdLineException
+     * @throws CmdLineException if unable to process the parameters
      */
     public void parseNextArgument(final Parameters parameters) throws IllegalArgumentException,
             CmdLineException {

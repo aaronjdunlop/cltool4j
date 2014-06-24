@@ -10,6 +10,11 @@
         </javadoc>
     </target>
 
+    <target name="clean">
+        <delete dir="build" />
+        <mkdir dir="build" />
+    </target>
+    
     <target name="compile" description="Compile">
         <delete dir="build" failonerror="false" />
         <mkdir dir="build" />

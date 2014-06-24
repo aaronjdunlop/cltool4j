@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -599,46 +600,59 @@ public abstract class BaseCommandlineTool {
      */
     public Iterable<String> inputLines(final BufferedReader reader, final int skipHeaderLines)
             throws IOException {
-        try {
-            return new Iterable<String>() {
-                String line = reader.readLine();
-                int linesSkipped = 0;
 
-                @Override
-                public Iterator<String> iterator() {
+        return new Iterable<String>() {
+            String nextLine = getNextLine();
+            int linesSkipped = 0;
 
-                    return new Iterator<String>() {
+            @Override
+            public Iterator<String> iterator() {
 
-                        @Override
-                        public boolean hasNext() {
-                            return line != null;
+                return new Iterator<String>() {
+
+                    @Override
+                    public boolean hasNext() {
+                        if (nextLine == null) {
+                            nextLine = getNextLine();
                         }
+                        return nextLine != null;
+                    }
 
-                        @Override
-                        public String next() {
-                            String tmp = line;
-                            try {
-                                for (; linesSkipped < skipHeaderLines; linesSkipped++) {
-                                    tmp = line;
-                                    line = reader.readLine();
-                                }
-                                tmp = line;
-                                line = reader.readLine();
-                            } catch (final IOException e) {
-                                line = null;
+                    @Override
+                    public String next() {
+                        if (nextLine == null) {
+                            if ((nextLine = getNextLine()) == null) {
+                                throw new NoSuchElementException();
                             }
-                            return tmp;
                         }
+                        final String tmp = nextLine;
+                        nextLine = null;
+                        return tmp;
+                    }
 
-                        @Override
-                        public void remove() {
-                        }
-                    };
+                    @Override
+                    public void remove() {
+                    }
+                };
+            }
+
+            /**
+             * Reads and returns the next available line (should only be called with
+             * <code>nextLine == null</code>).
+             * 
+             * @return the next available line
+             */
+            private String getNextLine() {
+                try {
+                    for (; linesSkipped < skipHeaderLines; linesSkipped++) {
+                        reader.readLine();
+                    }
+                    return reader.readLine();
+                } catch (final IOException e) {
+                    return null;
                 }
-            };
-        } catch (final IOException e) {
-            return new LinkedList<String>();
-        }
+            }
+        };
     }
 
     /**

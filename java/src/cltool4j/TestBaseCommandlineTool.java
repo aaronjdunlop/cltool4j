@@ -42,6 +42,9 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         final String input = "This is a\nthree-line\ntest.\n";
         final String output = executeTool(new Cat(), "", input);
         assertEquals(input, output);
+
+        // Test skipping 2 header lines
+        assertEquals("test.\n", executeTool(new Cat(), "-header 2", input));
     }
 
     /**
@@ -187,13 +190,13 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         StringBuilder sb = new StringBuilder();
         sb.append("<-badarg> is not a valid option\n");
         sb.append("\n");
-        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-option opt] [files]\n");
+        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-option opt] [-header lines] [files]\n");
         sb.append(" -help (--help,-?)   : Print usage information\n");
         sb.append(" -O <option / file>  : Option or option file (file in Java properties format or option as key=value)\n");
         sb.append(" -v <level>          : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0; warning,-1;\n");
         sb.append("                       severe,-2; off,-3)   Default = info\n");
         sb.append(" -option <opt>       : Integer option;   Default = 2\n");
-
+        sb.append(" -header <lines>     : Skip header lines\n");
         assertEquals(sb.toString(), executeTool(new Cat(), "-badarg", ""));
 
         // With a missing option
@@ -239,7 +242,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     public void testExtendedUsageOutput() throws Exception {
         // Test with an invalid option
         final StringBuilder sb = new StringBuilder();
-        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-version] [-charset] [-pause] [-option opt] [-hidden] [files]\n");
+        sb.append("Usage: TestBaseCommandlineTool$Cat [-help] [-O option / file] [-v level] [-version] [-charset] [-pause] [-option opt] [-header lines] [-hidden] [files]\n");
         sb.append(" -help (--help,-?)    : Print usage information\n");
         sb.append(" -O <option / file>   : Option or option file (file in Java properties format or option as key=value)\n");
         sb.append(" -v <level>           : Verbosity  (all,+5,5; finest,+4,4; finer,+3,3; fine,+2,2,debug; config,+1,1; info,0;\n");
@@ -248,6 +251,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         sb.append(" -charset             : Charset of all input (STDIN and files)\n");
         sb.append(" -pause               : Pause for a single carriage-return after setup\n");
         sb.append(" -option <opt>        : Integer option;   Default = 2\n");
+        sb.append(" -header <lines>      : Skip header lines\n");
         sb.append(" -hidden              : Hidden option\n");
 
         // Basic check of -help output
@@ -470,13 +474,16 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         }
     }
 
-    @SuppressWarnings("unused")
     private static class Cat extends BaseCommandlineTool {
         private boolean setupFlag = false;
 
         @Option(name = "-option", metaVar = "opt", usage = "Integer option")
         public int option = 2;
 
+        @Option(name = "-header", metaVar = "lines", usage = "Skip header lines")
+        public int headerLines;
+
+        @SuppressWarnings("unused")
         @Option(name = "-hidden", hidden = true, usage = "Hidden option")
         public boolean hidden = false;
 
@@ -500,8 +507,7 @@ public class TestBaseCommandlineTool extends ToolTestCase {
                 sb.deleteCharAt(sb.length() - 1);
             }
 
-            final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            for (String s = br.readLine(); s != null; s = br.readLine()) {
+            for (final String s : inputLines(headerLines)) {
                 System.out.println(s);
             }
         }
