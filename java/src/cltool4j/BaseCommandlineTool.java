@@ -438,7 +438,6 @@ public abstract class BaseCommandlineTool {
 
             cleanup();
             System.out.flush();
-            System.out.close();
         }
     }
 
@@ -562,7 +561,8 @@ public abstract class BaseCommandlineTool {
      * 
      * @throws IOException if an error occurs while reading from the {@link InputStream}.
      */
-    public Iterable<String> inputLines(final InputStream is, final int skipHeaderLines) throws IOException {
+    public final Iterable<String> inputLines(final InputStream is, final int skipHeaderLines)
+            throws IOException {
         return inputLines(new BufferedReader(new InputStreamReader(inputStream(is), inputCharset())),
                 skipHeaderLines);
     }
@@ -573,7 +573,7 @@ public abstract class BaseCommandlineTool {
      * 
      * @throws IOException if an error occurs while reading from the {@link InputStream}.
      */
-    public Iterable<String> inputLines(final InputStream is) throws IOException {
+    public final Iterable<String> inputLines(final InputStream is) throws IOException {
         return inputLines(new BufferedReader(new InputStreamReader(inputStream(is), inputCharset())), 0);
     }
 
@@ -584,7 +584,7 @@ public abstract class BaseCommandlineTool {
      * @return an {@link Iterator} over input lines, split by the supplied {@link BufferedReader}.
      * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
      */
-    public Iterable<String> inputLines(final BufferedReader reader) throws IOException {
+    public final Iterable<String> inputLines(final BufferedReader reader) throws IOException {
         return inputLines(reader, 0);
     }
 
@@ -598,7 +598,7 @@ public abstract class BaseCommandlineTool {
      * 
      * @throws IOException if an error occurs while reading from the {@link BufferedReader}.
      */
-    public Iterable<String> inputLines(final BufferedReader reader, final int skipHeaderLines)
+    public final Iterable<String> inputLines(final BufferedReader reader, final int skipHeaderLines)
             throws IOException {
 
         return new Iterable<String>() {

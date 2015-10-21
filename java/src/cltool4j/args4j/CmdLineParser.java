@@ -273,10 +273,28 @@ public class CmdLineParser {
             // Make sure all required options are present for any options which define them
             for (final Setter<?> setter : observedSetters) {
                 if (setter.option != null && setter.option.requires() != null
-                        && setter.option.requires().length() > 0
-                        && !observedOptionNames.contains(setter.option.requires())) {
-                    throw new CmdLineException("Option <" + setter.option.requires() + "> is required for <"
-                            + setter.option.name() + ">");
+                        && setter.option.requires().length() > 0) {
+                    // The 'requires' attribute is comma-separated
+                    for (final String requiredOption : setter.option.requires().split(",")) {
+                        if (!observedOptionNames.contains(requiredOption)) {
+                            throw new CmdLineException("Option <" + requiredOption + "> is required for <"
+                                    + setter.option.name() + ">");
+                        }
+                    }
+                }
+            }
+
+            // Check for conflicting options
+            for (final Setter<?> setter : observedSetters) {
+                if (setter.option != null && setter.option.conflicts() != null
+                        && setter.option.conflicts().length() > 0) {
+                    // The 'conflicts' attribute is comma-separated
+                    for (final String conflictingOption : setter.option.conflicts().split(",")) {
+                        if (observedOptionNames.contains(conflictingOption)) {
+                            throw new CmdLineException("Option <" + conflictingOption
+                                    + "> cannot be used with <" + setter.option.name() + ">");
+                        }
+                    }
                 }
             }
 

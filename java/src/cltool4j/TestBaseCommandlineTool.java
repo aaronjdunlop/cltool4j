@@ -368,20 +368,61 @@ public class TestBaseCommandlineTool extends ToolTestCase {
     public void testRequires() throws Exception {
         final WithRequires tool = new WithRequires();
 
-        // We should be able to run without either option
+        // We should be able to run without any options
         String output = executeTool(tool, "", "");
         assertEquals("", output);
-        // Or with both
-        output = executeTool(tool, "-o1 1 -o2 2", "");
+        // Or with all 3
+        output = executeTool(tool, "-o1 1 -o2 2 -o3 3", "");
+        assertEquals("", output);
+        // Or with just -o3
+        output = executeTool(tool, "-o3 3", "");
+        assertEquals("", output);
+        // Ensure that aliases are handled too
+        output = executeTool(tool, "-o1 1 --option-2 2 -o3 3", "");
         assertEquals("", output);
 
         // But -o1 depends on -o2
         output = executeTool(tool, "-o1 1", "");
         assertTrue(output.startsWith("Option <-o2> is required for <-o1>"));
 
-        // And -o2 depends on -o1
+        // And -o2 depends on -o1 and -o3
         output = executeTool(tool, "-o2 2", "");
         assertTrue(output.startsWith("Option <-o1> is required for <-o2>"));
+
+        output = executeTool(tool, "-o1 1 -o2 2", "");
+        assertTrue(output.startsWith("Option <-o3> is required for <-o2>"));
+    }
+
+    /**
+     * Tests the {@link Option#conflicts()} parameter.
+     */
+    @Test
+    public void testConflicts() throws Exception {
+        final WithConflicts tool = new WithConflicts();
+
+        // We should be able to run without any options
+        String output = executeTool(tool, "", "");
+        assertEquals("", output);
+        // Or with -o1 or -o2 in conjunction with -o3
+        output = executeTool(tool, "-o1 1 -o3 3", "");
+        assertEquals("", output);
+        output = executeTool(tool, "-o2 3 -o3 3", "");
+        assertEquals("", output);
+
+        // But -o1 conflicts with -o2
+        output = executeTool(tool, "-o1 1 -o2 2", "");
+        assertTrue(output.startsWith("Option <-o2> cannot be used with <-o1>"));
+        // Same if we use an alias
+        output = executeTool(tool, "-o1 1 --option-2 2", "");
+        assertTrue(output.startsWith("Option <-o2> cannot be used with <-o1>"));
+
+        // And -o4 conflicts with both -o1 and -o2
+        output = executeTool(tool, "-o1 1 -o4 4", "");
+        assertTrue(output.startsWith("Option <-o1> cannot be used with <-o4>"));
+        output = executeTool(tool, "-o2 1 -o4 4", "");
+        assertTrue(output.startsWith("Option <-o2> cannot be used with <-o4>"));
+        output = executeTool(tool, "--option-2 1 -o4 4", "");
+        assertTrue(output.startsWith("Option <-o2> cannot be used with <-o4>"));
     }
 
     @Test
@@ -663,14 +704,47 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         }
     }
 
+    /**
+     * -o3 can be used without other options, but -o1 requires -o2 and -o2 requires both -o1 and -o3
+     */
     private static class WithRequires extends BaseCommandlineTool {
         @SuppressWarnings("unused")
-        @Option(name = "-o1", usage = "o", requires = "-o2", metaVar = "value")
+        @Option(name = "-o1", aliases = { "--option-1" }, usage = "o", requires = "-o2", metaVar = "value")
         private String o1;
 
         @SuppressWarnings("unused")
-        @Option(name = "-o2", usage = "o", requires = "-o1", metaVar = "value")
+        @Option(name = "-o2", aliases = { "--option-2" }, usage = "o", requires = "-o1,-o3", metaVar = "value")
         private String o2;
+
+        @SuppressWarnings("unused")
+        @Option(name = "-o3", usage = "o", metaVar = "value")
+        private String o3;
+
+        @Override
+        protected void run() throws Exception {
+        }
+    }
+
+    /**
+     * -o3 is valid with any other options, but -o1 and -o2 cannot be used together, nor can -o4 be used with
+     * -o1 or -o2
+     */
+    private static class WithConflicts extends BaseCommandlineTool {
+        @SuppressWarnings("unused")
+        @Option(name = "-o1", aliases = { "--option-1" }, usage = "o", conflicts = "-o2", metaVar = "value")
+        private String o1;
+
+        @SuppressWarnings("unused")
+        @Option(name = "-o2", aliases = { "--option-2" }, usage = "o", metaVar = "value")
+        private String o2;
+
+        @SuppressWarnings("unused")
+        @Option(name = "-o3", usage = "o", metaVar = "value")
+        private String o3;
+
+        @SuppressWarnings("unused")
+        @Option(name = "-o4", usage = "o", conflicts = "-o1,-o2", metaVar = "value")
+        private String o4;
 
         @Override
         protected void run() throws Exception {

@@ -145,7 +145,13 @@ public @interface Option {
     String optionalChoiceGroup() default "";
 
     /**
-     * @return The name of another {@link Option} which is required in conjunction with this {@link Option}.
+     * @return The name(s) of other {@link Option}s which are required in conjunction with this {@link Option}
+     *         (comma-separated).
      */
     String requires() default "";
+
+    /**
+     * @return The name(s) of other {@link Option}s which conflict with this {@link Option} (comma-separated).
+     */
+    String conflicts() default "";
 }
