@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<project name="cltool" default="dist" basedir=".">
+<project name="cltool4j" default="dist" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
-	<property environment="env" />
-	
+    <property environment="env" />
+    <property name="version" value="1.0.5" />
+
+    <ivy:settings refid="ivysettings" file="${env.HOME}/.ivy2/ivysettings-sonatype.xml" />
+
     <target name="javadoc" description="Package JavaDoc">
         <javadoc destdir="build-doc/javadoc" classpath="java/lib/junit.jar:java/lib/log4j.jar">
             <fileset dir="java/src" includes="**/*.java" excludes="**/Test*.java,**/Profile*.java,**/All*Tests.java,**/*TestCase.java" />
@@ -14,25 +17,36 @@
         <delete dir="build" />
         <mkdir dir="build" />
     </target>
-    
+
     <target name="compile" description="Compile">
         <delete dir="build" failonerror="false" />
         <mkdir dir="build" />
         <javac srcdir="java/src" destdir="build" classpath="java/lib/junit.jar:java/lib/jvmstat.jar:${env.JAVA_HOME}/lib/tools.jar" debug="true" includeantruntime="false" />
     </target>
 
-    <target name="dist" depends="compile" description="Build release jar">
+    <target name="dist" depends="compile,javadoc" description="Build release jar files">
         <!-- Package a version with sun classes -->
-        <jar file="build/cltool4j.jar">
+        <jar file="build-dist/cltool4j-${version}.jar">
             <fileset dir="build" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" />
             <zipfileset src="java/lib/jvmstat.jar" />
         </jar>
 
         <!-- And a version without sun classes -->
-        <jar basedir="build" file="build/cltool4j-nosun.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" />
+        <jar basedir="build" file="build-dist/cltool4j-${version}-nosun.jar" includes="**/*.class" excludes="**/Test*.class,**/AllTests.class" />
 
-        <!-- And a source jar -->
-        <jar basedir="java/src" file="build/cltool4j-src.jar" includes="**/*.java" />
+        <!-- Source jar -->
+        <jar basedir="java/src" file="build-dist/cltool4j-${version}-sources.jar" includes="**/*.java" />
+
+        <!-- And a JavaDoc jar -->
+        <jar basedir="build-doc/javadoc" file="build-dist/cltool4j-${version}-javadoc.jar" includes="**" />
     </target>
 
+    <!-- TODO Remove - I can't get either Ivy or Maven to sign and upload successfully --> 
+    <target name="deploy">
+        <ivy:resolve />
+        <ivy:publish 
+            artifactspattern="${basedir}/build/[artifact]-[revision](-[classifier]).[ext]" resolver="${resolver}" 
+            organisation="com.google.code.cltool4j" module="cltool4j" overwrite="true" status="${status}" pubrevision="${version}">
+        </ivy:publish>
+    </target>
 </project>

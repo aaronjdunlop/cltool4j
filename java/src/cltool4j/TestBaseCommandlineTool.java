@@ -619,23 +619,28 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         }
     }
 
-    @SuppressWarnings("unused")
     private static class WithChoiceGroups extends BaseCommandlineTool {
+        @SuppressWarnings("unused")
         @Option(name = "-o1", usage = "o", choiceGroup = "A", metaVar = "value")
         private String o1;
 
+        @SuppressWarnings("unused")
         @Option(name = "-o2", usage = "o", choiceGroup = "A", metaVar = "value")
         private String o2;
 
+        @SuppressWarnings("unused")
         @Option(name = "-o3", usage = "o", choiceGroup = "B", metaVar = "value")
         private String o3;
 
+        @SuppressWarnings("unused")
         @Option(name = "-o4", usage = "o", choiceGroup = "B", metaVar = "value")
         private String o4;
 
+        @SuppressWarnings("unused")
         @Option(name = "-o5", usage = "o", choiceGroup = "B", metaVar = "value")
         private String o5;
 
+        @SuppressWarnings("unused")
         @Option(name = "-o6", usage = "o", choiceGroup = "B", metaVar = "value")
         private String[] o6;
 
@@ -644,11 +649,12 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         }
     }
 
-    @SuppressWarnings("unused")
     private static class WithOptionalChoiceGroups extends BaseCommandlineTool {
+        @SuppressWarnings("unused")
         @Option(name = "-o1", usage = "o", optionalChoiceGroup = "A", metaVar = "value")
         private String o1;
 
+        @SuppressWarnings("unused")
         @Option(name = "-o2", usage = "o", optionalChoiceGroup = "A", metaVar = "value")
         private String o2;
 
@@ -657,11 +663,12 @@ public class TestBaseCommandlineTool extends ToolTestCase {
         }
     }
 
-    @SuppressWarnings("unused")
     private static class WithRequires extends BaseCommandlineTool {
+        @SuppressWarnings("unused")
         @Option(name = "-o1", usage = "o", requires = "-o2", metaVar = "value")
         private String o1;
 
+        @SuppressWarnings("unused")
         @Option(name = "-o2", usage = "o", requires = "-o1", metaVar = "value")
         private String o2;
 

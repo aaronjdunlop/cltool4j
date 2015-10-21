@@ -20,7 +20,7 @@ public class ConfigProperties extends Properties {
     /**
      * Returns the value of the specified property
      * 
-     * @param key
+     * @param key Key
      * @return the value of the specified property
      * @throws InvalidConfigurationException if the property is not set or cannot be parsed as an integer
      */
@@ -36,8 +36,8 @@ public class ConfigProperties extends Properties {
     /**
      * Returns the value of the specified property
      * 
-     * @param key
-     * @param defaultValue
+     * @param key Key
+     * @param defaultValue Default value (returned if <code>key</code> is not set)
      * @return the value of the specified property or <code>defaultValue</code> if not set
      */
     @Override
@@ -52,7 +52,7 @@ public class ConfigProperties extends Properties {
     /**
      * Parses the specified property as an integer.
      * 
-     * @param key
+     * @param key Key
      * @return the specified property as an integer
      * @throws InvalidConfigurationException if the property is not set or cannot be parsed as an integer
      */
@@ -67,8 +67,8 @@ public class ConfigProperties extends Properties {
     /**
      * Parses the specified property as an integer.
      * 
-     * @param key
-     * @param defaultValue
+     * @param key Key
+     * @param defaultValue Default value (returned if <code>key</code> is not set)
      * @return the value of the specified property or <code>defaultValue</code> if not set
      */
     public int getIntProperty(final String key, final int defaultValue) {
@@ -86,7 +86,7 @@ public class ConfigProperties extends Properties {
     /**
      * Parses the specified property as an float.
      * 
-     * @param key
+     * @param key Key
      * @return the specified property as an float
      * @throws InvalidConfigurationException if the property is not set or cannot be parsed as an float
      */
@@ -101,8 +101,8 @@ public class ConfigProperties extends Properties {
     /**
      * Parses the specified property as a float.
      * 
-     * @param key
-     * @param defaultValue
+     * @param key Key
+     * @param defaultValue Default value (returned if <code>key</code> is not set)
      * @return the value of the specified property or <code>defaultValue</code> if not set
      */
     public float getFloatProperty(final String key, final float defaultValue) {
@@ -120,7 +120,7 @@ public class ConfigProperties extends Properties {
     /**
      * Parses the specified property as an boolean.
      * 
-     * @param key
+     * @param key Key
      * @return the specified property as an boolean
      * @throws InvalidConfigurationException if the property is not set or cannot be parsed as an boolean
      */
@@ -135,8 +135,8 @@ public class ConfigProperties extends Properties {
     /**
      * Parses the specified property as a float.
      * 
-     * @param key
-     * @param defaultValue
+     * @param key Key
+     * @param defaultValue Default value (returned if <code>key</code> is not set)
      * @return the value of the specified property or <code>defaultValue</code> if not set
      */
     public boolean getBooleanProperty(final String key, final boolean defaultValue) {
@@ -156,7 +156,7 @@ public class ConfigProperties extends Properties {
      * properties set in the provided {@link Properties} instance override those in the current global
      * storage).
      * 
-     * @param newProperties
+     * @param newProperties New {@link Properties}
      */
     public void mergeOver(final Properties newProperties) {
         for (final Object key : newProperties.keySet()) {
@@ -168,7 +168,7 @@ public class ConfigProperties extends Properties {
      * Merges the provided properties into global property storage, skipping any conflicting keys (that is,
      * existing properties override properties set in the provided {@link Properties} instance).
      * 
-     * @param newProperties
+     * @param newProperties new {@link Properties}
      */
     public void mergeUnder(final Properties newProperties) {
         for (final Object key : newProperties.keySet()) {

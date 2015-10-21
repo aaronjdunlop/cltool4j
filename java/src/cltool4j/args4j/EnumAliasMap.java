@@ -85,7 +85,7 @@ public final class EnumAliasMap {
     }
 
     /**
-     * @param enumClass
+     * @param enumClass Enumeration
      * @return A string representation of the legal command-line parameters for the specified {@link Enum}
      */
     public String usage(final Class<? extends Enum<?>> enumClass) {
