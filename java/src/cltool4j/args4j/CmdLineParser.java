@@ -158,6 +158,8 @@ public class CmdLineParser {
     public <T> void parseArguments(final String... args) throws CmdLineException {
         final Parameters parameters = new Parameters(args);
 
+        final Map<String, Setter<?>> setterMap = setterMap();
+
         final Set<Setter<?>> observedSetters = new HashSet<Setter<?>>();
         final Set<String> observedOptionNames = new HashSet<String>();
 
@@ -178,7 +180,7 @@ public class CmdLineParser {
             if (parameters.peek().charAt(0) == '-') {
                 // Parse as an option.
                 final String optionName = parameters.next();
-                setter = (Setter<T>) findOptionByName(optionName);
+                setter = (Setter<T>) setterMap.get(optionName);
 
                 if (setter == null) {
                     throw new CmdLineException("<" + optionName + "> is not a valid option");
@@ -316,24 +318,19 @@ public class CmdLineParser {
     }
 
     /**
-     * Finds a registered {@link Setter} by its name or alias.
-     * 
-     * @param name name
-     * @return the {@link Setter} instance or <code>null</code> if none is found
+     * @return {@link Map} from option to the matching {@link Setter}
      */
-    private Setter<?> findOptionByName(final String name) {
-        // TODO Add set of option names
-        for (final Setter<?> h : optionSetters) {
-            if (name.equals(h.option.name())) {
-                return h;
-            }
-            for (final String alias : h.option.aliases()) {
-                if (name.equals(alias)) {
-                    return h;
-                }
+    private Map<String, Setter<?>> setterMap() {
+
+        final HashMap<String, Setter<?>> map = new HashMap<String, Setter<?>>();
+        for (final Setter<?> s : optionSetters) {
+            map.put(s.option.name(), s);
+
+            for (final String alias : s.option.aliases()) {
+                map.put(alias, s);
             }
         }
-        return null;
+        return map;
     }
 
     private String choiceGroupSummary(final LinkedList<Setter<?>> choiceGroupSetters) {
