@@ -3,7 +3,7 @@
 <project name="cltool4j" default="dist" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
     <property environment="env" />
-    <property name="version" value="1.0.5" />
+    <property name="version" value="1.0.6" />
 
     <ivy:settings refid="ivysettings" file="${env.HOME}/.ivy2/ivysettings-sonatype.xml" />
 
@@ -21,7 +21,10 @@
     <target name="compile" description="Compile">
         <delete dir="build" failonerror="false" />
         <mkdir dir="build" />
-        <javac srcdir="java/src" destdir="build" classpath="java/lib/junit.jar:java/lib/jvmstat.jar:${env.JAVA_HOME}/lib/tools.jar" debug="true" includeantruntime="false" />
+        <javac srcdir="java/src" destdir="build"
+            source="1.7" target="1.7"
+            classpath="java/lib/junit.jar:java/lib/jvmstat.jar:${env.JAVA_HOME}/lib/tools.jar" 
+            debug="true" includeantruntime="false" />
     </target>
 
     <target name="dist" depends="compile,javadoc" description="Build release jar files">
