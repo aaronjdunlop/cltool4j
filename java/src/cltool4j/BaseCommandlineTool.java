@@ -12,6 +12,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.SequenceInputStream;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -42,6 +44,12 @@ import cltool4j.args4j.Option;
  * majority of the functionality needed to execute java code as a 'standard' command-line tool, including
  * parsing command-line options and reading input from either STDIN or from multiple files specified on the
  * command-line.<br/>
+ * <br/>
+ * 
+ * Logging (to STDOUT) is provided through <code>java.util.logging</code> and {@link BaseLogger}, with
+ * verbosity controlled by {@link #verbosityLevel} and the <code>-v</code> option. Log4J is also configured
+ * similarly for dependent classes which use it. Log4J support is not as complete or well integrated, so the
+ * <code>java.util.logging</code> method is preferred.<br/>
  * <br/>
  * 
  * The standard Java libraries do not provide access to the requested main class (e.g. the class specified on
@@ -113,6 +121,15 @@ public abstract class BaseCommandlineTool {
     protected String[] inputFiles = new String[0];
 
     protected String currentInputFile;
+
+    private static Object log4jConsoleAppender;
+    static {
+        // Initialize the Log4j subsystem at INFO (if Log4j is present in CLASSPATH); This level will
+        // subsequently be modified by
+        // {@link BaseCommandlineTool#configureLog4j(cltool4j.BaseCommandlineTool.LogLevel)}
+        // to match the verbosity supplied on the command-line.
+        initializeLog4j();
+    }
 
     /**
      * Default constructor
@@ -254,6 +271,7 @@ public abstract class BaseCommandlineTool {
             run(c, args);
         } catch (final ClassNotFoundException e) {
             System.err.println("Unable to instantiate target class: " + e.getMessage());
+            e.printStackTrace();
             System.exit(-1);
         }
     }
@@ -287,6 +305,7 @@ public abstract class BaseCommandlineTool {
             run(c, args);
         } catch (final Exception e) {
             System.err.println("Unable to instantiate target class: " + e.getMessage());
+            e.printStackTrace();
             System.exit(-1);
         }
     }
@@ -317,6 +336,7 @@ public abstract class BaseCommandlineTool {
                 return c.getConstructor(new Class[] {}).newInstance(new Object[] {});
             } catch (final Exception e2) {
                 System.err.println("Unable to instantiate target class: " + e2.getMessage());
+                e2.printStackTrace();
                 System.exit(-1);
             }
             // Will never happen, but the compiler can't see the 'System.exit()' call above
@@ -390,6 +410,9 @@ public abstract class BaseCommandlineTool {
             baseLogger.addHandler(new SystemOutHandler(l));
             baseLogger.setLevel(l);
 
+            // Configure Log4J similarly, if present in CLASSPATH
+            configureLog4j(verbosityLevel);
+
             // If input files were specified on the command-line, check for the first one before running
             // setup(). If it cannot be found, we'd prefer to fail here than after a potentially expensive
             // setup() call
@@ -438,6 +461,128 @@ public abstract class BaseCommandlineTool {
 
             cleanup();
             System.out.flush();
+        }
+    }
+
+    /**
+     * Configures Log4J programmatically, attempting to match the <code>java.util.logging</code>
+     * configuration. All Log4J classes are accessed using reflection, so the Log4J package is not required
+     * for compilation or at runtime.
+     * 
+     * Configures a basic output pattern containing only the log message (the same as is done for
+     * <code>java.util.logging</code>. If another Log4j configuration is present in CLASSPATH, that
+     * configuration will override this pattern.
+     */
+    protected static void initializeLog4j() {
+        try {
+            // ConsoleAppender consoleAppender = new ConsoleAppender();
+            final Class<?> consoleAppenderClass = Class.forName("org.apache.log4j.ConsoleAppender");
+            log4jConsoleAppender = consoleAppenderClass.getConstructor().newInstance((Object[]) null);
+
+            // consoleAppender.setLayout(new PatternLayout("%m%n"));
+            final Class<?> layoutClass = Class.forName("org.apache.log4j.Layout");
+            final Class<?> patternLayoutClass = Class.forName("org.apache.log4j.PatternLayout");
+            final Object patternLayout = patternLayoutClass.getConstructor(String.class).newInstance("%m%n");
+            consoleAppenderClass.getMethod("setLayout", layoutClass).invoke(log4jConsoleAppender,
+                    patternLayout);
+
+            configureLog4j(LogLevel.config);
+
+            // Logger.getRootLogger().addAppender(consoleAppender);
+            final Class<?> loggerClass = Class.forName("org.apache.log4j.Logger");
+            final Object rootLogger = loggerClass.getMethod("getRootLogger", (Class[]) null).invoke(null,
+                    (Object[]) null);
+            loggerClass.getMethod("addAppender", Class.forName("org.apache.log4j.Appender")).invoke(
+                    rootLogger, log4jConsoleAppender);
+
+            // Ignore reflection exceptions - if Log4J isn't in the CLASSPATH, we'll skip configuring it.
+        } catch (final ClassNotFoundException ignore) {
+        } catch (final IllegalAccessException ignore) {
+        } catch (final InvocationTargetException ignore) {
+        } catch (final NoSuchMethodException ignore) {
+        } catch (final IllegalArgumentException ignore) {
+        } catch (final SecurityException ignore) {
+        } catch (final InstantiationException ignore) {
+        }
+    }
+
+    /**
+     * Configures Log4J programmatically, attempting to match the <code>java.util.logging</code>
+     * configuration. All Log4J classes are accessed using reflection, so the Log4J package is not required
+     * for compilation or at runtime.
+     */
+    protected static void configureLog4j(final LogLevel level) {
+        try {
+            // ConsoleAppender consoleAppender = new ConsoleAppender();
+            final Class<?> consoleAppenderClass = Class.forName("org.apache.log4j.ConsoleAppender");
+
+            // Set the log level. Log4J levels don't map all that cleanly to java.util.logging's. We reuse
+            // 'TRACE' and 'DEBUG', and skip 'FATAL', because it seems completely counterintuitive to map
+            // warning to anything but 'WARN'
+            final Class<?> levelClass = Class.forName("org.apache.log4j.Level");
+            final Object log4jLevel;
+
+            switch (level) {
+            case all:
+                // ALL
+                log4jLevel = levelClass.getField("ALL").get(null);
+                break;
+
+            case finest:
+            case finer:
+                // TRACE
+                log4jLevel = levelClass.getField("TRACE").get(null);
+                break;
+
+            case fine:
+                // DEBUG
+                log4jLevel = levelClass.getField("DEBUG").get(null);
+                break;
+
+            case config:
+            case info:
+                // INFO
+                log4jLevel = levelClass.getField("INFO").get(null);
+                break;
+
+            case warning:
+                // WARN
+                log4jLevel = levelClass.getField("WARN").get(null);
+                break;
+
+            case severe:
+                // ERROR
+                log4jLevel = levelClass.getField("ERROR").get(null);
+                break;
+
+            case off:
+                // OFF
+                log4jLevel = levelClass.getField("OFF").get(null);
+                break;
+
+            default:
+                // INFO
+                log4jLevel = levelClass.getField("INFO").get(null);
+                break;
+            }
+
+            // consoleAppender.setThreshold(level)
+            final Method setThresholdMethod = consoleAppenderClass.getMethod("setThreshold",
+                    Class.forName("org.apache.log4j.Priority"));
+            setThresholdMethod.invoke(log4jConsoleAppender, log4jLevel);
+
+            // consoleAppender.activateOptions();
+            consoleAppenderClass.getMethod("activateOptions", (Class[]) null).invoke(log4jConsoleAppender,
+                    (Object[]) null);
+
+            // Ignore reflection exceptions - if Log4J isn't in the CLASSPATH, we'll skip configuring it.
+        } catch (final IllegalAccessException ignore) {
+        } catch (final InvocationTargetException ignore) {
+        } catch (final NoSuchMethodException ignore) {
+        } catch (final ClassNotFoundException ignorignore) {
+        } catch (final IllegalArgumentException ignore) {
+        } catch (final NoSuchFieldException ignore) {
+        } catch (final SecurityException ignore) {
         }
     }
 
