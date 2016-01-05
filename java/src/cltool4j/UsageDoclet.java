@@ -26,6 +26,12 @@ import com.sun.javadoc.FieldDoc;
 import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 
+/**
+ * JavaDoc Doclet which processes JavaDoc-format comments as well as annotations to produce detailed usage
+ * documentation (usually packaged into META-INF/HELP.txt by genjar2 and accessed with '-long-help')
+ * 
+ * @author aarond
+ */
 public class UsageDoclet {
 
     //
